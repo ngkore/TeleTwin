@@ -1,0 +1,99 @@
+/*---------------------------------------------------------------------------------------------
+ * Widget Theme Overrides
+ *
+ * This file overrides default iTwinUI widget styles to apply custom dark theme
+ * Background: #0D1117 (GitHub dark)
+ * Text: #EAEAEA (light grey)
+ * Accent: #58A6FF (blue)
+ *--------------------------------------------------------------------------------------------*/
+
+/* Widget Container Background */
+.nz-widget-contentContainer {
+  background: #1b2634 !important;
+  color: #EAEAEA !important;
+}
+
+/* Tree Widget Styling */
+[class*="_iui"][class*="-tree"] {
+  background: #1b2634 !important;
+  color: #EAEAEA !important;
+}
+
+/* Tree Node Items */
+[class*="_iui"][class*="-tree"] [class*="node"] {
+  color: #EAEAEA !important;
+}
+
+[class*="_iui"][class*="-tree"] [class*="node"]:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+[class*="_iui"][class*="-tree"] [class*="node"][class*="selected"] {
+  background: rgba(88, 166, 255, 0.15) !important;
+  border-left: 3px solid #58A6FF !important;
+}
+
+/* Widget Panel Styling */
+.nz-widget-panel {
+  background: #1E2A32  !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Widget Headers */
+.nz-widget-header,
+[class*="widget-header"] {
+  background: #1E2A32  !important;
+  color: #EAEAEA !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* All iTwinUI Components in Dark Theme */
+[data-iui-theme="dark"] .iui-root,
+[data-iui-theme="dark"] {
+  /* Background colors */
+  --iui-color-background: #1b2634;
+  --iui-color-background-backdrop: #0D1117;
+  --iui-color-background-zebra: rgba(255, 255, 255, 0.03);
+  --iui-color-background-1: #161B22;
+  --iui-color-background-2: #1b2634;
+  --iui-color-background-3: #010409;
+
+  /* Text colors */
+  --iui-color-text: #EAEAEA;
+  --iui-color-text-muted: #A1A1AA;
+  /* this is the hightligh color */
+  --iui-color-text-accent: #58A6FF; 
+  --iui-color-text-disabled: #6B7280;
+
+  /* Border colors */
+  --iui-color-border: rgba(255, 255, 255, 0.08);
+  --iui-color-border-subtle: rgba(255, 255, 255, 0.05);
+  --iui-color-border-foreground: rgba(255, 255, 255, 0.15);
+
+  /* Interactive elements */
+  --iui-color-background-hover: rgba(255, 255, 255, 0.08);
+  --iui-color-background-selected: rgba(88, 166, 255, 0.15);
+  --iui-color-background-active: rgba(88, 166, 255, 0.25);
+
+  /* Status colors */
+  --iui-color-positive: #22C55E;
+  --iui-color-negative: #F87171;
+  --iui-color-warning: #FBBF24;
+  --iui-color-informational: #58A6FF;
+}
+/* Tooltip Styling */
+.iui-tooltip,
+[class*="iui-tooltip"] {
+  background: #161B22 !important;
+  color: #EAEAEA !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.nav-cube-face{
+  background-color: #272e32;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.imodeljs-icon{
+  display: none !important;
+}

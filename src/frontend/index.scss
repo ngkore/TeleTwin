@@ -1,0 +1,75 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
+@import '@itwin/itwinui-variables/index.css';
+@import '@itwin/itwinui-css/css/global.css';
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background-color: var(--iui-color-background);
+  color:  var(--iui-color-background-accent);
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+}
+
+// Override ALL iTwinUI layout padding for full-page layout
+.iui-layouts-page-content-padded,
+.iui-layouts-page-content,
+.iui-page,
+.iui-layouts-page,
+.iui-layouts-page > *,
+.iui-layouts-page-content > *,
+[class*="iui-layouts"],
+[class*="PageLayout"],
+body .iui-layouts-page-content-padded,
+body .iui-layouts-page-content,
+body [class*="iui-layouts"],
+body [class*="PageLayout"] {
+  padding: 0 !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+// Ensure full width layout for all containers
+html, body, #root {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  overflow-x: hidden;
+}
+
+// Override any container that might have padding
+* {
+  box-sizing: border-box;
+}
+
+// Force all direct children of body to have no padding
+body > *,
+#root > *,
+#root > * > *,
+#root > * > * > * {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}

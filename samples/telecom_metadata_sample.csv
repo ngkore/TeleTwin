@@ -1,0 +1,4 @@
+name,displayName,category,description,manufacturer,model,serialNumber,status,frequencyMin,frequencyMax,frequencyUnit,power,powerUnit,gain,technology,channels,notes
+Antenna,Main Communication Antenna,Antenna,Primary communication antenna array,Ericsson,AIR 6449,ER2023001,active,1800,2600,MHz,200,W,18,5G,,Multi-band sector antenna
+rru,Remote Radio Unit,RRU,High-capacity radio unit,Huawei,AAU5613,HW2023001,active,700,3800,MHz,,,,,8,Integrated radio and antenna unit
+microlink,Microwave Link,Microwave,Point-to-point microwave connection,Nokia,AirHopper,NK2023003,active,6000,42000,MHz,100,mW,,Microwave,2,Backhaul communication link

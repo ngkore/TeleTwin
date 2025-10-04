@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/D:\\UST\\Itwin\\daman\\viewer\\twin/**)",
+      "Read(/D:\\UST\\Itwin\\daman\\viewer\\twin/**)",
+      "Read(/D:\\UST\\Itwin\\daman\\viewer\\twin\\src\\components/**)",
+      "Read(/D:\\UST\\Itwin\\daman\\viewer\\twin/**)",
+      "Read(/D:\\UST\\Itwin\\daman\\viewer\\twin\\src\\components/**)",
+      "Read(/D:\\UST\\Itwin\\daman\\viewer\\twin/**)",
+      "Read(/D:\\UST\\Itwin\\daman\\viewer\\twin\\src\\components/**)",
+      "Read(/D:\\UST\\Itwin\\daman\\viewer\\twin\\src\\components/**)",
+      "Read(/D:\\UST\\Itwin\\daman\\viewer\\twin\\src\\services/**)",
+      "Read(/D:\\UST\\Itwin\\daman\\viewer\\twin/**)",
+      "Read(/D:\\UST\\Itwin\\daman\\viewer\\twin\\src\\components/**)",
+      "Read(/D:\\UST\\Itwin\\daman\\viewer\\twin\\samples/**)",
+      "Read(//d/teletwin/iot/data/**)",
+      "WebSearch",
+      "Read(//d/UST/Itwin/daman/viewer/twin/src/components/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
