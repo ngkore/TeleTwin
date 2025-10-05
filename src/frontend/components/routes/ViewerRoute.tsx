@@ -36,6 +36,7 @@ import { InfoPanel } from "../InfoPanel";
 import { TeleTwinViewerApp } from "../../app/TeleTwinViewerApp";
 import { cleanupService } from "../../services/CleanupService";
 import { IoTWidgetProvider, IoTDataWidgetProvider, CustomTooltipProvider, TelemetryGraphWidgetProvider } from "../../iot-integration";
+import { StructuralAnalysisWidgetProvider, StructuralResultsWidgetProvider } from "../../structural-analysis";
 
 export interface ViewerRouteState {
   filePath?: string;
@@ -244,13 +245,15 @@ export const ViewerRoute = () => {
         measureGroup: true,
       },
     }),
-    // new ViewerStatusbarItemsProvider(),
+    new ViewerStatusbarItemsProvider(),
     new TreeWidgetUIProvider(),
-    new GisProviderWidgetProvider(), // Priority 1 - Top of right panel
-    new IoTWidgetProvider(), // Priority 200
-    new IoTDataWidgetProvider(), // Priority 210
-    new PropertiesWidgetProvider(), // Priority 300
-    new TelemetryGraphWidgetProvider(), // Priority 100 - Bottom panel
+    // new GisProviderWidgetProvider(), // Priority 1 - Top of right panel
+    new StructuralAnalysisWidgetProvider(), // Priority 150 - Structural analysis input
+    new StructuralResultsWidgetProvider(), // Priority 160 - Structural analysis results
+    // new IoTWidgetProvider(), // Priority 200
+    // new IoTDataWidgetProvider(), // Priority 210
+    // new PropertiesWidgetProvider(), // Priority 300
+    // new TelemetryGraphWidgetProvider(), // Priority 100 - Bottom panel
   ], []);
 
   return filePath ? (

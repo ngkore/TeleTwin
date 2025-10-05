@@ -64,7 +64,7 @@ const viewerMain = async () => {
   ECSchemaRpcImpl.register();
 
   if (process.env.NODE_ENV === "development") {
-    // ElectronHost.mainWindow?.webContents.toggleDevTools();
+    ElectronHost.mainWindow?.webContents.toggleDevTools();
   }
   // add the menu
   // ElectronHost.mainWindow?.on("ready-to-show", createMenu);
