@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import * as path from 'path';
 import { DelhiTowerSimulator } from './delhiSimulator';
 import { SimpleStorage } from './storage';
 
@@ -21,12 +22,16 @@ export class DelhiApiServer {
     // Enable CORS for all routes
     this.app.use(cors({
       origin: '*',
-      methods: ['GET', 'POST', 'OPTIONS'],
+      methods: ['GET', 'POST', 'OPTIONS', 'DELETE'],
       allowedHeaders: ['Content-Type', 'Authorization']
     }));
 
     // Parse JSON bodies
     this.app.use(express.json());
+
+    // Serve static files from public directory
+    const publicPath = path.join(__dirname, '..', 'public');
+    this.app.use(express.static(publicPath));
 
     // Add request logging
     this.app.use((req, res, next) => {
@@ -34,6 +39,8 @@ export class DelhiApiServer {
       next();
     });
   }
+
+
 
   private setupRoutes(): void {
     // Health check endpoint
@@ -162,18 +169,82 @@ export class DelhiApiServer {
       }
     });
 
+    // Manual cleanup endpoint
+    this.app.post('/api/cleanup', (req, res) => {
+      try {
+        this.storage.manualCleanup();
+        const stats = this.storage.getStatistics();
+
+        res.json({
+          success: true,
+          message: 'Manual cleanup completed',
+          timestamp: new Date().toISOString(),
+          statistics: stats
+        });
+      } catch (error) {
+        console.error('❌ Error during manual cleanup:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to cleanup data',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    });
+
+    // Export telemetry data as CSV
+    this.app.get('/api/export/csv', (req, res) => {
+      try {
+        const limit = parseInt(req.query.limit as string) || 200; // optional ?limit=500
+        const telemetryData = this.storage.getLatestTelemetry(limit);
+
+        if (!telemetryData || telemetryData.length === 0) {
+          return res.status(404).send('No telemetry data found');
+        }
+
+        // Convert to CSV
+        const headers = Object.keys(telemetryData[0]);
+        const csvRows = [
+          headers.join(','), // header row
+          ...telemetryData.map(row => headers.map(h => JSON.stringify(row[h] ?? '')).join(','))
+        ];
+        const csvContent = csvRows.join('\n');
+
+        // Set headers to force download
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="telemetry_export_${Date.now()}.csv"`);
+        res.send(csvContent);
+
+        console.log(`📦 Exported ${telemetryData.length} records to CSV`);
+      } catch (error) {
+        console.error('❌ Error exporting CSV:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to export CSV',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    });
+
+
+    // Dashboard home
+    this.app.get('/', (req, res) => {
+      res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html'));
+    });
+
     // 404 handler
     this.app.use((req, res) => {
       res.status(404).json({
         success: false,
         error: 'Endpoint not found',
         availableEndpoints: [
-          'GET /health',
-          'GET /api/telemetry/latest',
-          'GET /api/telemetry/device/:deviceId',
-          'GET /api/telemetry/range',
-          'GET /api/devices',
-          'GET /api/stats'
+          'GET  /                           - Dashboard UI',
+          'GET  /health                     - Server health',
+          'GET  /api/telemetry/latest       - Latest telemetry',
+          'GET  /api/telemetry/device/:id   - Device data',
+          'GET  /api/telemetry/range        - Time range query',
+          'GET  /api/devices                - All devices',
+          'GET  /api/stats                  - Statistics',
+          'POST /api/cleanup                - Manual cleanup'
         ]
       });
     });
@@ -183,13 +254,18 @@ export class DelhiApiServer {
     return new Promise((resolve) => {
       this.server = this.app.listen(port, () => {
         console.log(`🚀 Delhi Tower API Server running on http://localhost:${port}`);
+        console.log(`🎯 Dashboard UI: http://localhost:${port}/`);
         console.log(`📡 Available endpoints:`);
+        console.log(`   GET  /                           - Interactive Dashboard`);
         console.log(`   GET  /health                     - Server health check`);
         console.log(`   GET  /api/telemetry/latest       - Latest telemetry data`);
         console.log(`   GET  /api/telemetry/device/:id   - Device-specific data`);
         console.log(`   GET  /api/telemetry/range        - Time range query`);
         console.log(`   GET  /api/devices                - All devices info`);
         console.log(`   GET  /api/stats                  - Database statistics`);
+        console.log(`   POST /api/cleanup                - Manual data cleanup`);
+        console.log(``);
+        console.log(`💡 Open http://localhost:${port}/ in your browser to view the dashboard`);
         console.log(``);
         resolve();
       });

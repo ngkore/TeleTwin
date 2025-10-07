@@ -91,6 +91,11 @@ export class RRUSimulator {
       adjacentChannelPower: DataGenerators.randomFloat(-48, -43), // dBc (spec: < -45 dBc)
       spuriousEmissions: DataGenerators.randomFloat(-68, -60), // dBm (spec: < -60 dBm)
 
+      // Signal strength: Received signal from mobile devices at RRU
+      // Typical range: -60 dBm (very close) to -110 dBm (cell edge)
+      // Varies with traffic load and environmental conditions
+      signalStrength: DataGenerators.randomFloat(-95, -65) + (trafficLoad > 70 ? -5 : 0) + (ambientTemp > 40 ? -3 : 0),
+
       // Digital Signal Processing
       cpriDataRate: DataGenerators.randomFloat(2400, 9830), // Mbps (CPRI: Option 3 = 2.4G, Option 7 = 9.8G)
       digitalPredistortion: {

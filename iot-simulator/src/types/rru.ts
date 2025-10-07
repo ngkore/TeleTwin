@@ -34,6 +34,7 @@ export interface RRUTelemetry extends TelemetryData {
   noiseFloor: number; // in dBm
   adjacentChannelPower: number; // in dBc
   spuriousEmissions: number; // in dBm
+  signalStrength: number; // in dBm - received signal from mobile devices
 
   // Digital Signal Processing
   cpriDataRate: number; // Common Public Radio Interface in Mbps

@@ -43,6 +43,7 @@ export interface MicrolinkTelemetry extends TelemetryData {
   bitErrorRate: number; // BER
   blockErrorRate: number; // BLER
   unavailableTime: number; // in seconds
+  signalStrength: number; // in dBm - same as receivedSignalLevel for compatibility
 
   // Adaptive Modulation
   currentModulation: ModulationType;

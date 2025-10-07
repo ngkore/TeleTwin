@@ -82,6 +82,10 @@ export class MicrolinkSimulator {
       blockErrorRate: DataGenerators.generateBER(snr) * 150, // BLER typically 50-200x higher than BER
       unavailableTime: linkQuality < 85 ? DataGenerators.randomFloat(1, 30) : DataGenerators.randomFloat(0, 2), // seconds in last hour
 
+      // Signal strength: Same as receivedSignalLevel for microwave links
+      // Microlink's received signal strength at the receiver antenna
+      signalStrength: Math.max(-90, Math.min(-30, rsl)),
+
       // Adaptive Modulation
       currentModulation: this.selectCurrentModulation(snr),
       modulationEfficiency: this.getModulationEfficiency(),
