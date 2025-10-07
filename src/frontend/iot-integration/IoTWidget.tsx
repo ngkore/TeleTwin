@@ -417,13 +417,13 @@ export class IoTWidgetProvider implements UiItemsProvider {
 
   public provideWidgets(_stageId: string, _stageUsage: string, location: StagePanelLocation, _section?: StagePanelSection) {
     const widgets: Widget[] = [];
-    if (location === StagePanelLocation.Right) {
+    if (location === StagePanelLocation.Left) {
       widgets.push({
         id: "IoTTelemetryWidget",
         label: "Telemetry Control",
         defaultState: WidgetState.Closed,
         // canPopout: true,
-        allowedPanels: [StagePanelLocation.Right, StagePanelLocation.Left, StagePanelLocation.Bottom],
+        allowedPanels: [StagePanelLocation.Left, StagePanelLocation.Left, StagePanelLocation.Bottom],
         priority: 200,
         content: <IoTWidget />
       });

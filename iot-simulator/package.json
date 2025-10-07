@@ -1,0 +1,29 @@
+{
+  "name": "delhi-vodafone-tower-simulator",
+  "version": "4.0.0",
+  "description": "Realistic Delhi Vodafone tower simulator with standard vendor equipment",
+  "main": "dist/delhiDemo.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "delhi": "ts-node src/delhiDemo.ts",
+    "delhi:build": "npm run build && node dist/delhiDemo.js",
+    "clean": "rm -rf dist/ */output/ node_modules/.cache"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "uuid": "^10.0.0",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^22.0.0",
+    "@types/uuid": "^10.0.0",
+    "@types/express": "^4.17.17",
+    "@types/cors": "^2.8.13",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.6.0"
+  }
+}

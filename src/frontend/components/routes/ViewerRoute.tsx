@@ -33,6 +33,7 @@ import { MetadataManager } from "../../../common/MetadataManager";
 import { TowerManager } from "../../../common/TowerManager";
 import { ViewportHeader } from "../ViewportHeader";
 import { InfoPanel } from "../InfoPanel";
+import { DashboardSwitcher } from "../DashboardSwitcher";
 import { TeleTwinViewerApp } from "../../app/TeleTwinViewerApp";
 import { cleanupService } from "../../services/CleanupService";
 import { IoTWidgetProvider, IoTDataWidgetProvider, CustomTooltipProvider, TelemetryGraphWidgetProvider } from "../../iot-integration";
@@ -77,6 +78,7 @@ export const ViewerRoute = () => {
   const onIModelConnected = useCallback(async (iModel: IModelConnection) => {
     (window as any).iModelApp = { iModel };
     setIsModelConnected(true);
+
 
     // Register custom tooltip provider
     const tooltipProvider = CustomTooltipProvider.getInstance();
@@ -265,15 +267,21 @@ export const ViewerRoute = () => {
       },
     }),
     new ViewerStatusbarItemsProvider(),
-    new TreeWidgetUIProvider(),
-    // new GisProviderWidgetProvider(), // Priority 1 - Top of right panel
-    new StructuralAnalysisWidgetProvider(), // Priority 150 - Structural analysis input
-    new StructuralResultsWidgetProvider(), // Priority 160 - Structural analysis results
-    new SimulationComparisonWidgetProvider(), // Priority 100 - Bottom panel simulation dashboard
-    // new IoTWidgetProvider(), // Priority 200
-    // new IoTDataWidgetProvider(), // Priority 210
-    // new PropertiesWidgetProvider(), // Priority 300
-    // new TelemetryGraphWidgetProvider(), // Priority 100 - Bottom panel
+
+    // Home Dashboard widgets
+    new TreeWidgetUIProvider(), // Hierarchy/Model tree
+    new PropertiesWidgetProvider(), // Properties panel
+    // new MetadataWidgetProvider(), // Metadata viewer
+
+    // Telemetry Dashboard widgets
+    new IoTWidgetProvider(), // IoT Telemetry Control
+    new IoTDataWidgetProvider(), // IoT Data Inspector
+    new TelemetryGraphWidgetProvider(), // Telemetry Graph (Bottom panel)
+
+    // Analysis Dashboard widgets
+    new StructuralAnalysisWidgetProvider(), // Structural analysis input
+    new StructuralResultsWidgetProvider(), // Structural analysis results
+    new SimulationComparisonWidgetProvider(), // Simulation comparison (Bottom panel)
   ], []);
 
   return filePath ? (
@@ -335,6 +343,9 @@ export const ViewerRoute = () => {
             />
           </div>
         </div>
+
+        {/* Dashboard Switcher - Fixed left side */}
+        {isModelConnected && <DashboardSwitcher />}
 
       </div>
       {showInfoPanel && createPortal(
