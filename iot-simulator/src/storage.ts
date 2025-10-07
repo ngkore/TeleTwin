@@ -7,6 +7,7 @@ export class SimpleStorage {
   private dbPath: string;
   private db: Database.Database;
   private outputDir: string;
+  private readonly MAX_TELEMETRY_RECORDS = 1000; // Maximum records to keep in DB
 
   constructor(outputDir: string) {
     // Ensure output directory exists
@@ -73,37 +74,46 @@ export class SimpleStorage {
       stmt.run(t.deviceId, t.timestamp, JSON.stringify(t));
     });
 
-    // Also append to JSON file
+    // Cleanup old records to prevent memory overflow
+    this.cleanupOldTelemetry();
 
-    console.log(`💾 Stored ${normalizedBatch.length} telemetry records (DB + JSON)`);
+    console.log(`💾 Stored ${normalizedBatch.length} telemetry records (DB only)`);
   }
 
-  // private appendToJsonFile(telemetryBatch: TelemetryData[]): void {
-  //   try {
-  //     let existingData: any[] = [];
+  /**
+   * Cleanup old telemetry records to prevent memory overflow
+   * Keeps only the most recent MAX_TELEMETRY_RECORDS entries
+   */
+  private cleanupOldTelemetry(): void {
+    try {
+      // Get current record count
+      const countStmt = this.db.prepare('SELECT COUNT(*) as count FROM telemetry');
+      const currentCount = (countStmt.get() as any).count;
 
-  //     // Read existing data if file exists
-  //     if (fs.existsSync(this.jsonPath)) {
-  //       const fileContent = fs.readFileSync(this.jsonPath, 'utf-8');
-  //       if (fileContent.trim()) {
-  //         existingData = JSON.parse(fileContent);
-  //       }
-  //     }
+      // Only cleanup if we exceed the maximum
+      if (currentCount > this.MAX_TELEMETRY_RECORDS) {
+        const recordsToDelete = currentCount - this.MAX_TELEMETRY_RECORDS;
 
-  //     // Append new data
-  //     existingData.push(...telemetryBatch);
+        // Delete oldest records, keeping the most recent MAX_TELEMETRY_RECORDS
+        const deleteStmt = this.db.prepare(`
+          DELETE FROM telemetry
+          WHERE id IN (
+            SELECT id FROM telemetry
+            ORDER BY timestamp ASC
+            LIMIT ?
+          )
+        `);
 
-  //     // Keep only last 1000 records to prevent file from getting too large
-  //     if (existingData.length > 1000) {
-  //       existingData = existingData.slice(-1000);
-  //     }
+        const result = deleteStmt.run(recordsToDelete);
+        console.log(`🗑️  Cleaned up ${result.changes} old telemetry records (keeping last ${this.MAX_TELEMETRY_RECORDS})`);
 
-  //     // Write back to file
-  //     fs.writeFileSync(this.jsonPath, JSON.stringify(existingData, null, 2));
-  //   } catch (error) {
-  //     console.error('⚠️ Error writing to JSON file:', error);
-  //   }
-  // }
+        // Optimize database after cleanup
+        this.db.exec('VACUUM');
+      }
+    } catch (error) {
+      console.error('⚠️ Error during telemetry cleanup:', error);
+    }
+  }
 
   // Get latest telemetry records from database
   getLatestTelemetry(limit = 50): any[] {
@@ -160,10 +170,20 @@ export class SimpleStorage {
     return {
       totalDevices: deviceCount,
       totalRecords: telemetryCount,
+      maxRecords: this.MAX_TELEMETRY_RECORDS,
       recordsPerDevice: recordsPerDevice,
       databasePath: this.dbPath,
       lastUpdate: new Date().toISOString()
     };
+  }
+
+  /**
+   * Manually trigger cleanup of old telemetry records
+   * Can be called externally if needed
+   */
+  public manualCleanup(): void {
+    console.log('🧹 Manual cleanup triggered...');
+    this.cleanupOldTelemetry();
   }
 
   close(): void {
