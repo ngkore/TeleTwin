@@ -252,7 +252,9 @@ const TelemetryGraphWidget: React.FC = () => {
       background: 'linear-gradient(135deg, #1F2937 0%, #111827 100%)',
       padding: '20px 24px',
       overflowX: 'auto',
-      overflowY: 'hidden'
+      overflowY: 'auto',
+      display: 'flex',
+      flexDirection: 'column'
     }}>
       {/* Header */}
       <div style={{
@@ -291,9 +293,10 @@ const TelemetryGraphWidget: React.FC = () => {
       {/* Metrics Grid */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
         gap: '20px',
-        minWidth: 'fit-content'
+        width: '100%',
+        paddingBottom: '20px'
       }}>
         {/* Temperature - Area Chart with Gradient */}
         {currentValues.temperature !== undefined && (
@@ -303,7 +306,7 @@ const TelemetryGraphWidget: React.FC = () => {
             padding: '16px',
             border: '1px solid rgba(255,255,255,0.08)',
             backdropFilter: 'blur(10px)',
-            minWidth: '280px'
+            minWidth: '300px'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
               <div>
@@ -328,7 +331,7 @@ const TelemetryGraphWidget: React.FC = () => {
                 {getMetricStatus(currentValues.temperature, 'temperature').status}
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={120}>
+            <ResponsiveContainer width="100%" height={160}>
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="tempGradient" x1="0" y1="0" x2="0" y2="1">
@@ -373,7 +376,7 @@ const TelemetryGraphWidget: React.FC = () => {
             padding: '16px',
             border: '1px solid rgba(255,255,255,0.08)',
             backdropFilter: 'blur(10px)',
-            minWidth: '280px'
+            minWidth: '300px'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
               <div>
@@ -398,7 +401,7 @@ const TelemetryGraphWidget: React.FC = () => {
                 {getMetricStatus(currentValues.powerConsumption, 'power').status}
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={120}>
+            <ResponsiveContainer width="100%" height={160}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                 <XAxis
@@ -441,7 +444,7 @@ const TelemetryGraphWidget: React.FC = () => {
             padding: '16px',
             border: '1px solid rgba(255,255,255,0.08)',
             backdropFilter: 'blur(10px)',
-            minWidth: '280px'
+            minWidth: '300px'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
               <div>
@@ -466,7 +469,7 @@ const TelemetryGraphWidget: React.FC = () => {
                 {getMetricStatus(currentValues.signalStrength, 'signal').status}
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={120}>
+            <ResponsiveContainer width="100%" height={160}>
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                 <XAxis
@@ -506,7 +509,7 @@ const TelemetryGraphWidget: React.FC = () => {
             padding: '16px',
             border: '1px solid rgba(255,255,255,0.08)',
             backdropFilter: 'blur(10px)',
-            minWidth: '280px'
+            minWidth: '300px'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
               <div>
@@ -531,7 +534,7 @@ const TelemetryGraphWidget: React.FC = () => {
                 {getMetricStatus(currentValues.healthScore, 'health').status}
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={120}>
+            <ResponsiveContainer width="100%" height={160}>
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="healthGradient" x1="0" y1="0" x2="0" y2="1">
@@ -573,6 +576,33 @@ const TelemetryGraphWidget: React.FC = () => {
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
+        }
+
+        /* Custom Scrollbar Styles */
+        div::-webkit-scrollbar {
+          width: 10px;
+          height: 10px;
+        }
+
+        div::-webkit-scrollbar-track {
+          background: rgba(17, 24, 39, 0.5);
+          border-radius: 5px;
+        }
+
+        div::-webkit-scrollbar-thumb {
+          background: rgba(75, 85, 99, 0.8);
+          border-radius: 5px;
+          border: 2px solid rgba(17, 24, 39, 0.5);
+        }
+
+        div::-webkit-scrollbar-thumb:hover {
+          background: rgba(107, 114, 128, 0.9);
+        }
+
+        /* Firefox scrollbar */
+        * {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(75, 85, 99, 0.8) rgba(17, 24, 39, 0.5);
         }
       `}</style>
     </div>
