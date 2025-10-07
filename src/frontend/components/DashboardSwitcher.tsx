@@ -6,7 +6,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import React, { useState, useCallback } from 'react';
-import { UiFramework } from '@itwin/appui-react';
+import { UiFramework, StagePanelLocation } from '@itwin/appui-react';
 import { Home, Radio, BarChart3, Rotate3D } from "lucide-react"
 
 
@@ -98,10 +98,41 @@ export const DashboardSwitcher: React.FC<DashboardSwitcherProps> = ({ onModeChan
           break;
       }
 
-      // Open selected widgets
+      // Open selected widgets in their designated locations
       for (const widgetId of widgetsToOpen) {
         try {
-          await UiFramework.frontstages.setWidgetState(widgetId, 1); // 1 = Open
+          // Determine the target location for each widget
+          let targetLocation: StagePanelLocation | undefined = undefined;
+
+          // Telemetry widgets
+          if (widgetId === 'IoTTelemetryWidget') {
+            targetLocation = StagePanelLocation.Left;
+          } else if (widgetId === 'IoTDataWidget') {
+            targetLocation = StagePanelLocation.Right;
+          } else if (widgetId === 'TelemetryGraphWidget') {
+            targetLocation = StagePanelLocation.Bottom;
+          }
+          // Home widgets
+          else if (widgetId === 'HierarchyWidget') {
+            targetLocation = StagePanelLocation.Left;
+          } else if (widgetId === 'PropertiesWidget') {
+            targetLocation = StagePanelLocation.Right;
+          }
+          // Analysis widgets
+          else if (widgetId === 'StructuralAnalysisWidget') {
+            targetLocation = StagePanelLocation.Left;
+          } else if (widgetId === 'StructuralResultsWidget') {
+            targetLocation = StagePanelLocation.Right;
+          } else if (widgetId === 'SimulationComparisonWidget') {
+            targetLocation = StagePanelLocation.Bottom;
+          }
+
+          // If widget needs to be moved to a specific location
+          if (targetLocation !== undefined) {
+            await UiFramework.frontstages.setWidgetState(widgetId, 1);
+          } else {
+            await UiFramework.frontstages.setWidgetState(widgetId, 1);
+          }
         } catch (error) {
           console.warn(`[DashboardSwitcher] Could not open widget: ${widgetId}`, error);
         }

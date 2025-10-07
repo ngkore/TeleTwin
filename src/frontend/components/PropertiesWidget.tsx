@@ -15,8 +15,6 @@ import { Text } from "@itwin/itwinui-react";
 import React, { FunctionComponent, useState, useEffect } from "react";
 import { MetadataManager, ElementMetadata } from "../../common/MetadataManager";
 import { theme } from "../theme/theme";
-import { IoTIntegrationManager } from "../iot-integration/IoTIntegrationManager";
-import { TooltipTelemetryData } from "../iot-integration/types";
 
 // TEXT SIZE OPTIONS - Change these values to adjust font sizes
 const TEXT_SIZES = {
@@ -35,12 +33,9 @@ const toTitleCase = (str: string): string => {
 const PropertiesWidget: FunctionComponent = () => {
   const iModel = useActiveIModelConnection();
   const metadataManager = MetadataManager.getInstance();
-  const iotManager = IoTIntegrationManager.getInstance();
   const [selectedElementMetadata, setSelectedElementMetadata] = useState<ElementMetadata | null>(null);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [allMetadata, setAllMetadata] = useState<ElementMetadata[]>([]);
-  const [telemetryData, setTelemetryData] = useState<TooltipTelemetryData | null>(null);
-  const [isIoTActive, setIsIoTActive] = useState(false);
 
   useEffect(() => {
     const updateMetadata = (metadata: ElementMetadata[]) => {
@@ -100,24 +95,16 @@ const PropertiesWidget: FunctionComponent = () => {
             }
             
             setSelectedElementMetadata(metadata || null);
-
-            // Check for IoT telemetry data if IoT is active
-            if (iotManager.getIsInitialized() && isIoTActive) {
-              const telemetry = iotManager.getTelemetryForElement(firstElementId);
-              setTelemetryData(telemetry || null);
-            }
           }
         } else {
           console.log("No selection");
           setSelectedElementId(null);
           setSelectedElementMetadata(null);
-          setTelemetryData(null);
         }
       } catch (error) {
         console.error("Error handling selection change:", error);
         setSelectedElementId(null);
         setSelectedElementMetadata(null);
-        setTelemetryData(null);
       }
     };
 
@@ -133,186 +120,10 @@ const PropertiesWidget: FunctionComponent = () => {
       console.log("Removing selection listener");
       removeListener();
     };
-  }, [iModel, metadataManager, iotManager, isIoTActive]);
-
-  // Listen for IoT sync status changes and telemetry updates
-  useEffect(() => {
-    if (!iotManager.getIsInitialized()) {
-      return;
-    }
-
-    const statusListener = () => {
-      const status = iotManager.getSyncStatus();
-      setIsIoTActive(status?.isRunning || false);
-
-      // Refresh telemetry data for current selection
-      if (selectedElementId) {
-        const telemetry = iotManager.getTelemetryForElement(selectedElementId);
-        setTelemetryData(telemetry || null);
-      }
-    };
-
-    const updateListener = () => {
-      // Refresh telemetry data for current selection when new data arrives
-      if (selectedElementId) {
-        const telemetry = iotManager.getTelemetryForElement(selectedElementId);
-        setTelemetryData(telemetry || null);
-      }
-    };
-
-    iotManager.addStatusListener(statusListener);
-    iotManager.addUpdateListener(updateListener);
-    statusListener();
-
-    return () => {
-      iotManager.removeStatusListener(statusListener);
-      iotManager.removeUpdateListener(updateListener);
-    };
-  }, [iotManager, selectedElementId]);
+  }, [iModel, metadataManager]);
 
   const renderSelectedMetadata = () => {
-    // Show IoT telemetry data if available and IoT is active, otherwise show CSV metadata
-    if (isIoTActive && telemetryData) {
-      return (
-        <div style={{ marginTop: '10px' }}>
-          <div style={{ overflow: 'hidden' }}>
-            <div style={{
-              // backgroundColor: theme.colors.surface,
-              padding: '12px 10px',
-              fontWeight: 'bold',
-              fontSize: TEXT_SIZES.header,
-              color: theme.colors.textSecondary,
-              marginBottom: '8px',
-              textTransform: 'uppercase'
-            }}>
-              {telemetryData.displayLabel}
-            </div>
-
-            {/* Status Indicator */}
-            {telemetryData.status && (
-              <div style={{
-                display: 'flex',
-                // backgroundColor: theme.colors.surface,
-                minHeight: '32px',
-                alignItems: 'center',
-                marginBottom: '2px',
-                padding: '6px 10px'
-              }}>
-                <div style={{ fontWeight: 'bold', flex: '0 0 35%', fontSize: TEXT_SIZES.key, color: theme.colors.textSecondary }}>Status</div>
-                <div style={{ flex: '1', fontSize: TEXT_SIZES.value, color: theme.colors.textSecondary }}>{telemetryData.status}</div>
-              </div>
-            )}
-
-            {/* Health Score */}
-            {telemetryData.healthScore !== undefined && (
-              <div style={{
-                display: 'flex',
-                // backgroundColor: theme.colors.surface,
-                minHeight: '32px',
-                alignItems: 'center',
-                marginBottom: '2px',
-                padding: '6px 10px'
-              }}>
-                <div style={{ fontWeight: 'bold', flex: '0 0 35%', fontSize: TEXT_SIZES.key, color: theme.colors.textSecondary }}>Health Score</div>
-                <div style={{ flex: '1', fontSize: TEXT_SIZES.value, color: theme.colors.textSecondary }}>{telemetryData.healthScore.toFixed(0)}%</div>
-              </div>
-            )}
-
-            {/* Temperature */}
-            {telemetryData.temperature !== undefined && (
-              <div style={{
-                display: 'flex',
-                // backgroundColor: theme.colors.surface,
-                minHeight: '32px',
-                alignItems: 'center',
-                marginBottom: '2px',
-                padding: '6px 10px'
-              }}>
-                <div style={{ fontWeight: 'bold', flex: '0 0 35%', fontSize: TEXT_SIZES.key, color: theme.colors.textSecondary }}>Temperature</div>
-                <div style={{ flex: '1', fontSize: TEXT_SIZES.value, color: theme.colors.textSecondary }}>{telemetryData.temperature.toFixed(1)}°C</div>
-              </div>
-            )}
-
-            {/* Power Consumption */}
-            {telemetryData.powerConsumption !== undefined && (
-              <div style={{
-                display: 'flex',
-                // backgroundColor: theme.colors.surface,
-                minHeight: '32px',
-                alignItems: 'center',
-                marginBottom: '2px',
-                padding: '6px 10px'
-              }}>
-                <div style={{ fontWeight: 'bold', flex: '0 0 35%', fontSize: TEXT_SIZES.key, color: theme.colors.textSecondary }}>Power Consumption</div>
-                <div style={{ flex: '1', fontSize: TEXT_SIZES.value, color: theme.colors.textSecondary }}>{telemetryData.powerConsumption.toFixed(1)}W</div>
-              </div>
-            )}
-
-            {/* Signal Strength */}
-            {telemetryData.signalStrength !== undefined && (
-              <div style={{
-                display: 'flex',
-                //backgroundColor: theme.colors.surface,
-                minHeight: '32px',
-                alignItems: 'center',
-                marginBottom: '2px',
-                padding: '6px 10px'
-              }}>
-                <div style={{ fontWeight: 'bold', flex: '0 0 35%', fontSize: TEXT_SIZES.key, color: theme.colors.textSecondary }}>Signal Strength</div>
-                <div style={{ flex: '1', fontSize: TEXT_SIZES.value, color: theme.colors.textSecondary }}>{telemetryData.signalStrength.toFixed(1)}dBm</div>
-              </div>
-            )}
-
-            {/* Vendor */}
-            {telemetryData.vendor && (
-              <div style={{
-                display: 'flex',
-                //backgroundColor: theme.colors.surface,
-                minHeight: '32px',
-                alignItems: 'center',
-                marginBottom: '2px',
-                padding: '6px 10px'
-              }}>
-                <div style={{ fontWeight: 'bold', flex: '0 0 35%', fontSize: TEXT_SIZES.key, color: theme.colors.textSecondary }}>Vendor</div>
-                <div style={{ flex: '1', fontSize: TEXT_SIZES.value, color: theme.colors.textSecondary }}>{telemetryData.vendor}</div>
-              </div>
-            )}
-
-            {/* Model */}
-            {telemetryData.model && (
-              <div style={{
-                display: 'flex',
-                //backgroundColor: theme.colors.surface,
-                minHeight: '32px',
-                alignItems: 'center',
-                marginBottom: '2px',
-                padding: '6px 10px'
-              }}>
-                <div style={{ fontWeight: 'bold', flex: '0 0 35%', fontSize: TEXT_SIZES.key, color: theme.colors.textSecondary }}>Model</div>
-                <div style={{ flex: '1', fontSize: TEXT_SIZES.value, color: theme.colors.textSecondary }}>{telemetryData.model}</div>
-              </div>
-            )}
-
-            {/* Last Update */}
-            {telemetryData.lastUpdate && (
-              <div style={{
-                display: 'flex',
-                //backgroundColor: theme.colors.surface,
-                minHeight: '32px',
-                alignItems: 'center',
-                marginBottom: '2px',
-                padding: '6px 10px'
-              }}>
-                <div style={{ fontWeight: 'bold', flex: '0 0 35%', fontSize: TEXT_SIZES.key, color: theme.colors.textSecondary }}>Last Update</div>
-                <div style={{ flex: '1', fontSize: TEXT_SIZES.value, color: theme.colors.textSecondary }}>{new Date(telemetryData.lastUpdate).toLocaleString()}</div>
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    // Fallback to CSV metadata if no telemetry data or IoT is not active
+    // Only show CSV metadata
     if (!selectedElementMetadata) return null;
 
     const entries = Object.entries(selectedElementMetadata.metadata);

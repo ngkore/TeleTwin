@@ -421,10 +421,9 @@ export class IoTWidgetProvider implements UiItemsProvider {
       widgets.push({
         id: "IoTTelemetryWidget",
         label: "Telemetry Control",
-        defaultState: WidgetState.Closed,
-        // canPopout: true,
-        allowedPanels: [StagePanelLocation.Left, StagePanelLocation.Left, StagePanelLocation.Bottom],
-        priority: 200,
+        defaultState: WidgetState.Open,
+        canPopout: false,
+        priority: 150,
         content: <IoTWidget />
       });
     }
