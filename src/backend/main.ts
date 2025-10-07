@@ -54,8 +54,8 @@ const viewerMain = async () => {
   Presentation.initialize();
 
   await ElectronHost.openMainWindow({
-    width: 1280,
-    height: 800,
+    width: 1920,
+    height: 1080,
     show: true,
     title: appInfo.title,
     autoHideMenuBar: false,
@@ -64,7 +64,7 @@ const viewerMain = async () => {
   ECSchemaRpcImpl.register();
 
   if (process.env.NODE_ENV === "development") {
-    ElectronHost.mainWindow?.webContents.toggleDevTools();
+    // ElectronHost.mainWindow?.webContents.toggleDevTools();
   }
   // add the menu
   // ElectronHost.mainWindow?.on("ready-to-show", createMenu);
