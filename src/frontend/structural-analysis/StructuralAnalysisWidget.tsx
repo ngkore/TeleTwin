@@ -33,6 +33,14 @@ const StructuralAnalysisWidget: React.FC = () => {
   const [diameterTop, setDiameterTop] = useState<number>(250);
   const [thickness, setThickness] = useState<number>(5);
 
+  // Equipment state for platforms
+  const [p1Antennas, setP1Antennas] = useState<number>(4);
+  const [p1RRUs, setP1RRUs] = useState<number>(4);
+  const [p1Microwave, setP1Microwave] = useState<boolean>(true);
+  const [p2Antennas, setP2Antennas] = useState<number>(4);
+  const [p2RRUs, setP2RRUs] = useState<number>(8);
+  const [p2Microwave, setP2Microwave] = useState<boolean>(false);
+
   // Analysis state
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -50,6 +58,18 @@ const StructuralAnalysisWidget: React.FC = () => {
       try {
         await manager.initialize(iModelConnection);
         setIsInitialized(true);
+
+        // Sync UI state with manager's current equipment
+        const equipment = manager.getAllPlatformEquipment();
+        if (equipment.length >= 2) {
+          setP1Antennas(equipment[0].antennas);
+          setP1RRUs(equipment[0].rrus);
+          setP1Microwave(equipment[0].microwave);
+          setP2Antennas(equipment[1].antennas);
+          setP2RRUs(equipment[1].rrus);
+          setP2Microwave(equipment[1].microwave);
+          console.log('[StructuralAnalysis] ✅ Synced equipment state from manager');
+        }
       } catch (error) {
         console.error('Failed to initialize structural analysis manager:', error);
       }
@@ -101,16 +121,37 @@ const StructuralAnalysisWidget: React.FC = () => {
   }, [manager]);
 
   /**
+   * Update equipment for a platform
+   */
+  const updatePlatformEquipment = useCallback((platformIndex: number) => {
+    setIsAnalyzing(true);
+    try {
+      const counts = platformIndex === 0
+        ? { antennas: p1Antennas, rrus: p1RRUs, microwave: p1Microwave }
+        : { antennas: p2Antennas, rrus: p2RRUs, microwave: p2Microwave };
+
+      const results = manager.updateEquipmentCounts(platformIndex, counts);
+      setAnalysisResults(results);
+    } catch (error) {
+      console.error('Equipment update failed:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [manager, p1Antennas, p1RRUs, p1Microwave, p2Antennas, p2RRUs, p2Microwave]);
+
+  /**
    * Run structural analysis
+   * Preserves current equipment state and combines with user-modified tower/environmental parameters
    */
   const runAnalysis = useCallback(async () => {
     setIsAnalyzing(true);
 
     try {
       const defaultConfig = manager.getDefaultTowerConfiguration();
+      const currentInput = manager.getCurrentInput();
 
+      // Preserve equipment from current state, or use defaults if not available
       const input = {
-        ...defaultConfig,
         sections: [
           {
             height: towerHeight,
@@ -122,6 +163,9 @@ const StructuralAnalysisWidget: React.FC = () => {
         wind_speed_ms: windSpeed,
         exposure,
         steel_grade: steelGrade,
+        applied_load_kg: currentInput?.applied_load_kg ?? defaultConfig.applied_load_kg,
+        foundation_params: currentInput?.foundation_params ?? defaultConfig.foundation_params,
+        crown_platforms: currentInput?.crown_platforms ?? defaultConfig.crown_platforms, // PRESERVE equipment
       };
 
       const results = manager.runAnalysis(input);
@@ -160,7 +204,7 @@ const StructuralAnalysisWidget: React.FC = () => {
 
             if (iModelConnection) {
               await metadataManager.matchElementsWithMetadata(iModelConnection);
-              console.log('[StructuralAnalysis] ✅ CSV metadata loaded and matched');
+              ////console.log('[StructuralAnalysis] ✅ CSV metadata loaded and matched');
 
               // Re-extract and analyze with new metadata
               await manager.reExtractAndAnalyze();
@@ -279,6 +323,123 @@ const StructuralAnalysisWidget: React.FC = () => {
             value={steelGrade}
             onChange={(value) => setSteelGrade(value as SteelGrade)}
           />
+        </div>
+      </div>
+
+      {/* Equipment Management */}
+      <div style={{ marginBottom: '20px' }}>
+        <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#EAEAEA' }}>
+          Equipment Simulation
+        </h4>
+
+        {/* Platform 1 */}
+        <div style={{
+          marginBottom: '15px',
+          padding: '12px',
+          backgroundColor: 'rgba(255,255,255,0.05)',
+          borderRadius: '6px',
+          border: '1px solid rgba(255,255,255,0.1)'
+        }}>
+          <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '10px', color: '#10B981' }}>
+            Platform 1 (14m)
+          </div>
+
+          <LabeledInput
+            label="Antennas"
+            value={p1Antennas.toString()}
+            onChange={(e) => setP1Antennas(parseInt(e.target.value) || 0)}
+            type="number"
+            min={0}
+            max={12}
+            style={{ marginBottom: '8px' }}
+          />
+
+          <LabeledInput
+            label="RRUs"
+            value={p1RRUs.toString()}
+            onChange={(e) => setP1RRUs(parseInt(e.target.value) || 0)}
+            type="number"
+            min={0}
+            max={16}
+            style={{ marginBottom: '8px' }}
+          />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+            <input
+              type="checkbox"
+              checked={p1Microwave}
+              onChange={(e) => setP1Microwave(e.target.checked)}
+              style={{ cursor: 'pointer' }}
+            />
+            <label style={{ fontSize: '12px', color: '#EAEAEA', cursor: 'pointer' }}>
+              Microwave Dish
+            </label>
+          </div>
+
+          <Button
+            onClick={() => updatePlatformEquipment(0)}
+            disabled={isAnalyzing}
+            styleType="high-visibility"
+            style={{ width: '100%' }}
+            size="small"
+          >
+            {isAnalyzing ? 'Updating...' : 'Update Platform 1'}
+          </Button>
+        </div>
+
+        {/* Platform 2 */}
+        <div style={{
+          marginBottom: '10px',
+          padding: '12px',
+          backgroundColor: 'rgba(255,255,255,0.05)',
+          borderRadius: '6px',
+          border: '1px solid rgba(255,255,255,0.1)'
+        }}>
+          <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '10px', color: '#10B981' }}>
+            Platform 2 (11m)
+          </div>
+
+          <LabeledInput
+            label="Antennas"
+            value={p2Antennas.toString()}
+            onChange={(e) => setP2Antennas(parseInt(e.target.value) || 0)}
+            type="number"
+            min={0}
+            max={12}
+            style={{ marginBottom: '8px' }}
+          />
+
+          <LabeledInput
+            label="RRUs"
+            value={p2RRUs.toString()}
+            onChange={(e) => setP2RRUs(parseInt(e.target.value) || 0)}
+            type="number"
+            min={0}
+            max={16}
+            style={{ marginBottom: '8px' }}
+          />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+            <input
+              type="checkbox"
+              checked={p2Microwave}
+              onChange={(e) => setP2Microwave(e.target.checked)}
+              style={{ cursor: 'pointer' }}
+            />
+            <label style={{ fontSize: '12px', color: '#EAEAEA', cursor: 'pointer' }}>
+              Microwave Dish
+            </label>
+          </div>
+
+          <Button
+            onClick={() => updatePlatformEquipment(1)}
+            disabled={isAnalyzing}
+            styleType="high-visibility"
+            style={{ width: '100%' }}
+            size="small"
+          >
+            {isAnalyzing ? 'Updating...' : 'Update Platform 2'}
+          </Button>
         </div>
       </div>
 

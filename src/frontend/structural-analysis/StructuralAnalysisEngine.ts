@@ -273,8 +273,8 @@ export class StructuralAnalysisEngine {
    * Complete monopole structural analysis
    */
   analyzeMonopole(input: AnalysisInput): AnalysisResults {
-    console.log('[StructuralAnalysis] ▶ ENGINE: analyzeMonopole() START');
-    console.log('[StructuralAnalysis] ─────────────────────────────────────');
+    ////console.log('[StructuralAnalysis] ▶ ENGINE: analyzeMonopole() START');
+    ////console.log('[StructuralAnalysis] ─────────────────────────────────────');
 
     const {
       sections,
@@ -287,7 +287,7 @@ export class StructuralAnalysisEngine {
     } = input;
 
     // 1. Dead load
-    console.log('[StructuralAnalysis] 📐 Step 1: Calculating Dead Load...');
+    ////console.log('[StructuralAnalysis] 📐 Step 1: Calculating Dead Load...');
     const { poleWeight, crownWeight } = this.calculateDeadLoad(sections, crown_platforms);
     const totalDeadLoadKg = poleWeight + crownWeight;
     console.log(`[StructuralAnalysis]   ├─ Pole Weight: ${poleWeight.toFixed(1)} kg`);
@@ -327,14 +327,14 @@ export class StructuralAnalysisEngine {
       governingMoment = Math.min(allowablePoleMoment, foundationMomentCapacity);
       governingElement = foundationMomentCapacity < allowablePoleMoment ? 'FOUNDATION' : 'POLE';
 
-      console.log(`[StructuralAnalysis]   ├─ Foundation Moment Capacity: ${(foundationCapacity / 1000).toFixed(0)} kN⋅m`);
-      console.log(`[StructuralAnalysis]   ├─ Allowable Foundation Moment (÷2): ${(foundationMomentCapacity / 1000).toFixed(0)} kN⋅m`);
-      console.log(`[StructuralAnalysis]   ├─ Governing Moment: ${(governingMoment / 1000).toFixed(0)} kN⋅m`);
+      console.log(`[StructuralAnalysis]   ├─ Foundation Moment Capacity: ${(foundationCapacity / 1000).toFixed(2)} kN⋅m`);
+      console.log(`[StructuralAnalysis]   ├─ Allowable Foundation Moment (÷2): ${(foundationMomentCapacity / 1000).toFixed(2)} kN⋅m`);
+      console.log(`[StructuralAnalysis]   ├─ Governing Moment: ${(governingMoment / 1000).toFixed(2)} kN⋅m`);
       console.log(`[StructuralAnalysis]   └─ Governing Element: ${governingElement}`);
     } else {
       governingMoment = allowablePoleMoment;
       governingElement = 'POLE';
-      console.log(`[StructuralAnalysis]   └─ No foundation params, using POLE capacity: ${(governingMoment / 1000).toFixed(0)} kN⋅m`);
+      console.log(`[StructuralAnalysis]   └─ No foundation params, using POLE capacity: ${(governingMoment / 1000).toFixed(2)} kN⋅m`);
     }
 
     // 5. Wind loads
@@ -348,11 +348,11 @@ export class StructuralAnalysisEngine {
         : { windForce: 0, windMoment: 0 };
 
     console.log(`[StructuralAnalysis]   ├─ Wind Force: ${windForce.toFixed(0)} N`);
-    console.log(`[StructuralAnalysis]   └─ Wind Moment: ${(windMoment / 1000).toFixed(0)} kN⋅m`);
+    console.log(`[StructuralAnalysis]   └─ Wind Moment: ${(windMoment / 1000).toFixed(2)} kN⋅m`);
 
     // 6. Applied load moment
     const appliedMoment = applied_load_kg * this.GRAVITY * totalHeightM;
-    console.log(`[StructuralAnalysis] ⚖️ Step 6: Applied Load Moment = ${(appliedMoment / 1000).toFixed(0)} kN⋅m`);
+    console.log(`[StructuralAnalysis] ⚖️ Step 6: Applied Load Moment = ${(appliedMoment / 1000).toFixed(2)} kN⋅m`);
 
     // 7. Load combinations
     console.log('[StructuralAnalysis] 🔢 Step 7: Evaluating Load Combinations...');
@@ -374,7 +374,7 @@ export class StructuralAnalysisEngine {
     const maxLoadCapacity = totalHeightM > 0 ? governingMoment / (this.GRAVITY * totalHeightM) : 0;
 
     // Status determination
-    console.log('[StructuralAnalysis] ✅ Step 8: Determining Status...');
+    //console.log('[StructuralAnalysis] ✅ Step 8: Determining Status...');
     let status: string;
     if (maxUtilization > 1.0) {
       status = 'FAIL - Structure is overstressed!';
@@ -387,9 +387,9 @@ export class StructuralAnalysisEngine {
     } else {
       status = 'CONSERVATIVE - Significant reserve capacity';
     }
-    console.log(`[StructuralAnalysis]   └─ Status: ${status}`);
-    console.log('[StructuralAnalysis] ─────────────────────────────────────');
-    console.log('[StructuralAnalysis] ▶ ENGINE: analyzeMonopole() COMPLETE');
+    //console.log(`[StructuralAnalysis]   └─ Status: ${status}`);
+    //console.log('[StructuralAnalysis] ─────────────────────────────────────');
+    //console.log('[StructuralAnalysis] ▶ ENGINE: analyzeMonopole() COMPLETE');
 
     return {
       pole_weight_kg: poleWeight,

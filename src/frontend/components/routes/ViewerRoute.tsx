@@ -37,6 +37,7 @@ import { TeleTwinViewerApp } from "../../app/TeleTwinViewerApp";
 import { cleanupService } from "../../services/CleanupService";
 import { IoTWidgetProvider, IoTDataWidgetProvider, CustomTooltipProvider, TelemetryGraphWidgetProvider } from "../../iot-integration";
 import { StructuralAnalysisWidgetProvider, StructuralResultsWidgetProvider } from "../../structural-analysis";
+import { TowerSimulationController } from "../../simulation";
 
 export interface ViewerRouteState {
   filePath?: string;
@@ -80,6 +81,15 @@ export const ViewerRoute = () => {
     // Register custom tooltip provider
     const tooltipProvider = CustomTooltipProvider.getInstance();
     tooltipProvider.register();
+
+    // Initialize tower simulation controller
+    try {
+      const simulationController = TowerSimulationController.getInstance();
+      await simulationController.initialize(iModel);
+      console.log('[ViewerRoute] Tower simulation controller initialized');
+    } catch (error) {
+      console.error('[ViewerRoute] Failed to initialize simulation controller:', error);
+    }
 
     if (towerData) {
       await autoLoadTowerFiles(iModel);
@@ -231,6 +241,15 @@ export const ViewerRoute = () => {
 
   useEffect(() => {
     return () => {
+      // Cleanup simulation controller
+      try {
+        const simulationController = TowerSimulationController.getInstance();
+        simulationController.cleanup();
+        console.log('[ViewerRoute] Simulation controller cleaned up');
+      } catch (error) {
+        console.error('[ViewerRoute] Simulation cleanup failed:', error);
+      }
+
       cleanupService.cleanupBeforeNavigation().catch(error => {
         console.error('Cleanup failed during unmount:', error);
       });

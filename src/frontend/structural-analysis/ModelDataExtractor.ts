@@ -35,7 +35,7 @@ export class ModelDataExtractor {
     const timestamp = new Date().toISOString().split('T')[1].substring(0, 8);
     const logMessage = `[${timestamp}] ${message}`;
     this.log.push(logMessage);
-    console.log(`[StructuralAnalysis] ${logMessage}`);
+    //////////console.log(`[StructuralAnalysis] ${logMessage}`);
   }
 
   /**
@@ -78,21 +78,11 @@ export class ModelDataExtractor {
       this.addLog('📊 EXTRACTED PLATFORMS:');
       platforms.forEach((platform, idx) => {
         this.addLog(`  Platform ${idx + 1} @ ${platform.height}m:`);
-        this.addLog(`    ├─ Platform Weight: ${platform.platform_weight_kg} kg`);
-        this.addLog(`    ├─ Platform Wind Area: ${platform.platform_wind_area_m2} m²`);
-        this.addLog(`    ├─ Antennas: ${platform.antennas.length} units (Total: ${platform.antennas.reduce((sum, a) => sum + a.weight_kg, 0).toFixed(1)} kg)`);
-        this.addLog(`    ├─ RRUs: ${platform.rrus.length} units (Total: ${platform.rrus.reduce((sum, r) => sum + r.weight_kg, 0).toFixed(1)} kg)`);
-        this.addLog(`    └─ Other Equipment: ${platform.other_equipment.length} units (Total: ${platform.other_equipment.reduce((sum, e) => sum + e.weight_kg, 0).toFixed(1)} kg)`);
+        this.addLog(`    ├─ Antennas: ${platform.antennas.length} units`);
+        this.addLog(`    ├─ RRUs: ${platform.rrus.length} units`);
+        this.addLog(`    └─ Other Equipment: ${platform.other_equipment.length} units`);
       });
 
-      const totalEquipmentWeight = platforms.reduce((sum, p) => {
-        return sum + p.platform_weight_kg +
-          p.antennas.reduce((s, a) => s + a.weight_kg, 0) +
-          p.rrus.reduce((s, r) => s + r.weight_kg, 0) +
-          p.other_equipment.reduce((s, e) => s + e.weight_kg, 0);
-      }, 0);
-
-      this.addLog(`📊 TOTAL EQUIPMENT WEIGHT: ${totalEquipmentWeight.toFixed(1)} kg`);
       this.addLog('========================================');
 
       return {
@@ -108,90 +98,25 @@ export class ModelDataExtractor {
 
   /**
    * Extract tower geometry from model
-   * Searches for elements with "tower" in their name/label
+   * NOTE: Currently returns default Python script configuration (15m tower)
+   * Tower dimensions are kept constant; only equipment counts are extracted from model
    */
   private async extractTowerGeometry(): Promise<TowerSection[]> {
-    this.addLog('📐 Extracting tower geometry...');
+    this.addLog('📐 Using default tower geometry from Python script...');
 
-    // First, show ALL elements in the model for debugging
-    // await this.debugListAllElements('tower search');
+    // Python script standard: 15m monopole tower
+    const sections: TowerSection[] = [{
+      height: 15000,        // 15 meters
+      diameter_bottom: 628, // 628mm base
+      diameter_top: 250,    // 250mm top
+      thickness: 5,         // 5mm wall thickness
+    }];
 
-    try {
-      const query = `
-        SELECT
-          ECInstanceId as elementId,
-          UserLabel as displayLabel,
-          CodeValue,
-          Origin,
-          BBoxLow,
-          BBoxHigh
-        FROM BisCore.GeometricElement3d
-        WHERE (UserLabel LIKE '%tower%' OR UserLabel LIKE '%pole%' OR UserLabel LIKE '%monopole%')
-        AND UserLabel NOT LIKE '%VF-%'
-        LIMIT 10
-      `;
+    this.addLog(`  ✅ Tower: 15m height, 628mm base, 250mm top, 5mm thickness`);
 
-      const results = this.iModel.createQueryReader(query);
-      const sections: TowerSection[] = [];
-
-      for await (const row of results) {
-        const label = (row.displayLabel || row.codeValue || '').toString().toLowerCase();
-        this.addLog(`  Found element: "${row.displayLabel}" (ID: ${row.elementId})`);
-
-        // Extract bounding box for dimensions
-        if (row.bBoxLow && row.bBoxHigh) {
-          const bBoxLow = row.bBoxLow as { x: number; y: number; z: number };
-          const bBoxHigh = row.bBoxHigh as { x: number; y: number; z: number };
-
-          const height = Math.abs(bBoxHigh.z - bBoxLow.z) * 1000; // Convert to mm
-          const diameterAtBase = Math.max(
-            Math.abs(bBoxHigh.x - bBoxLow.x),
-            Math.abs(bBoxHigh.y - bBoxLow.y)
-          ) * 1000;
-
-          // Estimate top diameter (typically 40% of base for monopoles)
-          const diameterAtTop = diameterAtBase * 0.4;
-
-          this.addLog(`    Height: ${height.toFixed(0)} mm`);
-          this.addLog(`    Base diameter: ${diameterAtBase.toFixed(0)} mm`);
-          this.addLog(`    Top diameter: ${diameterAtTop.toFixed(0)} mm (estimated)`);
-
-          sections.push({
-            height: height,
-            diameter_bottom: diameterAtBase,
-            diameter_top: diameterAtTop,
-            thickness: 5, // Default 5mm thickness
-          });
-
-          break; // Use first tower found
-        }
-      }
-
-      // Fallback to default if nothing found
-      if (sections.length === 0 || sections[0].height === 0 || sections[0].diameter_bottom === 0 || sections[0].diameter_top === 0) {
-        this.addLog('  ⚠️ No tower geometry found in model, using default 15m tower '+sections[0]?.height+'mm'+sections[0]?.diameter_bottom+'mm'+sections[0]?.diameter_top+'mm');
-        sections.push({
-          height: 15000,
-          diameter_bottom: 628,
-          diameter_top: 250,
-          thickness: 5,
-        });
-      }
-
-      return sections;
-    } catch (error) {
-      this.addLog(`  ❌ Tower extraction error: ${error}`);
-      // Return default on error
-      return [
-        {
-          height: 15000,
-          diameter_bottom: 628,
-          diameter_top: 250,
-          thickness: 5,
-        },
-      ];
-    }
+    return sections;
   }
+  
 
   /**
    * Extract platform data and associated equipment
@@ -384,51 +309,30 @@ export class ModelDataExtractor {
   }
 
   /**
-   * Get default platform configuration
+   * Get default platform configuration (fallback when model extraction fails)
+   * Returns platforms with Python script specifications but NO equipment
+   * Equipment should be extracted from model or set by user
    */
   private getDefaultPlatforms(): CrownPlatform[] {
+    this.addLog('  ⚠️ Using default empty platforms (equipment should be extracted from model)');
     return [
       {
         height: 14.0,
         platform_weight_kg: 150,
         platform_wind_area_m2: 1.5,
         cf: 1.5,
-        antennas: [
-          { type: 'Sector Antenna', weight_kg: 40, wind_area_m2: 1.5, cf: 1.2 },
-          { type: 'Sector Antenna', weight_kg: 40, wind_area_m2: 1.5, cf: 1.2 },
-          { type: 'Sector Antenna', weight_kg: 40, wind_area_m2: 1.5, cf: 1.2 },
-          { type: 'Sector Antenna', weight_kg: 40, wind_area_m2: 1.5, cf: 1.2 },
-        ],
-        rrus: [
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-        ],
-        other_equipment: [{ type: 'Microlink', weight_kg: 25, wind_area_m2: 0.3, cf: 1.0 }],
+        antennas: [],
+        rrus: [],
+        other_equipment: [],
       },
       {
         height: 11.0,
         platform_weight_kg: 120,
         platform_wind_area_m2: 1.3,
         cf: 1.5,
-        antennas: [
-          { type: 'Sector Antenna', weight_kg: 40, wind_area_m2: 1.5, cf: 1.2 },
-          { type: 'Sector Antenna', weight_kg: 40, wind_area_m2: 1.5, cf: 1.2 },
-          { type: 'Sector Antenna', weight_kg: 40, wind_area_m2: 1.5, cf: 1.2 },
-          { type: 'Sector Antenna', weight_kg: 40, wind_area_m2: 1.5, cf: 1.2 },
-        ],
-        rrus: [
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-        ],
-        other_equipment: [{ type: 'Power Distribution', weight_kg: 20, wind_area_m2: 0.25, cf: 1.0 }],
+        antennas: [],
+        rrus: [],
+        other_equipment: [],
       },
     ];
   }
@@ -438,70 +342,5 @@ export class ModelDataExtractor {
    */
   public getLog(): string[] {
     return [...this.log];
-  }
-
-  /**
-   * Debug: List all elements in the model to help find correct naming patterns
-   */
-  private async debugListAllElements(context: string): Promise<void> {
-    this.addLog(`🔍 DEBUG (${context}): Listing all elements in model...`);
-
-    try {
-      const debugQuery = `
-        SELECT
-          ECInstanceId as elementId,
-          UserLabel as displayLabel,
-          CodeValue
-        FROM BisCore.GeometricElement3d
-        WHERE UserLabel IS NOT NULL
-        AND UserLabel != ''
-        ORDER BY UserLabel
-        LIMIT 50
-      `;
-
-      const results = this.iModel.createQueryReader(debugQuery);
-      let count = 0;
-
-      this.addLog(`  📋 Elements found in model:`);
-      for await (const row of results) {
-        count++;
-        const label = row.displayLabel || row.codeValue || 'unnamed';
-        this.addLog(`    [${count}] "${label}" (ID: ${row.elementId})`);
-      }
-
-      if (count === 0) {
-        this.addLog(`  ⚠️ No elements found with UserLabel!`);
-      } else {
-        this.addLog(`  ✅ Total: ${count} elements listed (max 50)`);
-      }
-
-      // Also check BisCore.Element (not just GeometricElement3d)
-      const allElementsQuery = `
-        SELECT
-          ECInstanceId as elementId,
-          UserLabel as displayLabel,
-          CodeValue
-        FROM BisCore.Element
-        WHERE UserLabel IS NOT NULL
-        AND UserLabel != ''
-        ORDER BY UserLabel
-        LIMIT 50
-      `;
-
-      const allResults = this.iModel.createQueryReader(allElementsQuery);
-      let allCount = 0;
-
-      this.addLog(`  📋 All BisCore.Element with labels:`);
-      for await (const row of allResults) {
-        allCount++;
-        const label = row.displayLabel || row.codeValue || 'unnamed';
-        this.addLog(`    [${allCount}] "${label}" (ID: ${row.elementId})`);
-      }
-
-      this.addLog(`  ✅ Total BisCore.Element: ${allCount} (max 50)`);
-
-    } catch (error) {
-      this.addLog(`  ❌ DEBUG query failed: ${error}`);
-    }
   }
 }

@@ -91,7 +91,7 @@ export class MetadataManager {
         }
       }
 
-      console.log(`Loaded ${this._csvData.length} metadata rows from CSV`);
+      ////console.log(`Loaded ${this._csvData.length} metadata rows from CSV`);
       this.notifyListeners();
     } catch (error) {
       console.error('Error loading CSV data:', error);
@@ -156,17 +156,17 @@ export class MetadataManager {
           const elementAnnotation = annotation.toLowerCase().trim();
           const elementCodeValue = codeValue ? codeValue.toLowerCase().trim() : '';
           
-          console.log(`🔍 Matching attempt: CSV "${csvName}" vs Element "${elementAnnotation}" (Code: "${elementCodeValue}")`);
+          //console.log(`🔍 Matching attempt: CSV "${csvName}" vs Element "${elementAnnotation}" (Code: "${elementCodeValue}")`);
           
           // Try exact match first
           if (csvName === elementAnnotation || (elementCodeValue && csvName === elementCodeValue)) {
-            console.log(`✅ Exact match found: ${csvName}`);
+            //console.log(`✅ Exact match found: ${csvName}`);
             return true;
           }
           
           // Try partial match - check if CSV name is contained in annotation or vice versa
           if (csvName.includes(elementAnnotation) || elementAnnotation.includes(csvName)) {
-            console.log(`✅ Partial match found: ${csvName}`);
+            //console.log(`✅ Partial match found: ${csvName}`);
             return true;
           }
           
@@ -175,7 +175,7 @@ export class MetadataManager {
           const cleanAnnotation = elementAnnotation.replace(/^(element|component|part|item)_?/i, '').replace(/_?(element|component|part|item)$/i, '');
           
           if (cleanCsvName === cleanAnnotation) {
-            console.log(`✅ Clean match found: ${cleanCsvName}`);
+            //console.log(`✅ Clean match found: ${cleanCsvName}`);
             return true;
           }
           
@@ -195,7 +195,7 @@ export class MetadataManager {
         }
       }
 
-      console.log(`Matched ${matches.length} elements with metadata`);
+      //console.log(`Matched ${matches.length} elements with metadata`);
       this.notifyListeners();
     } catch (error) {
       console.error('Error matching elements with metadata:', error);
@@ -207,15 +207,15 @@ export class MetadataManager {
    * Get metadata for a specific element
    */
   public getElementMetadata(elementId: string): ElementMetadata | undefined {
-    console.log(`🔍 MetadataManager: Looking for metadata for element: ${elementId}`);
-    console.log(`📊 Available metadata elements:`, Array.from(this._elementMetadata.keys()));
+    //console.log(`🔍 MetadataManager: Looking for metadata for element: ${elementId}`);
+    //console.log(`📊 Available metadata elements:`, Array.from(this._elementMetadata.keys()));
     
     const result = this._elementMetadata.get(elementId);
     if (result) {
-      console.log(`✅ Found metadata for element ${elementId}:`, result);
+      //console.log(`✅ Found metadata for element ${elementId}:`, result);
     } else {
-      console.log(`❌ No metadata found for element ${elementId}`);
-      console.log(`📋 Total metadata entries: ${this._elementMetadata.size}`);
+      //console.log(`❌ No metadata found for element ${elementId}`);
+      //console.log(`📋 Total metadata entries: ${this._elementMetadata.size}`);
       
       // Trigger dynamic matching asynchronously but return undefined immediately
       this.dynamicElementMatch(elementId);
@@ -231,7 +231,7 @@ export class MetadataManager {
     let result = this._elementMetadata.get(elementId);
     
     if (!result) {
-      console.log(`🔄 Trying dynamic match for element: ${elementId}`);
+      //console.log(`🔄 Trying dynamic match for element: ${elementId}`);
       result = await this.dynamicElementMatch(elementId);
     }
     
@@ -243,7 +243,7 @@ export class MetadataManager {
    */
   private async dynamicElementMatch(elementId: string): Promise<ElementMetadata | undefined> {
     if (this._csvData.length === 0) {
-      console.log('No CSV data available for dynamic matching');
+      //console.log('No CSV data available for dynamic matching');
       return undefined;
     }
 
@@ -251,11 +251,11 @@ export class MetadataManager {
       // Get current iModel connection (if available)
       const iModel = (window as any).iModelApp?.iModel;
       if (!iModel) {
-        console.log('No iModel available for dynamic matching');
+        //console.log('No iModel available for dynamic matching');
         return undefined;
       }
 
-      console.log(`🔄 Attempting dynamic match for element: ${elementId}`);
+      //console.log(`🔄 Attempting dynamic match for element: ${elementId}`);
       
       // Query for this specific element
       const query = `
@@ -271,7 +271,7 @@ export class MetadataManager {
         const codeValue = row.codeValue as string;
         
         if (annotation) {
-          console.log(`🔍 Dynamic matching: Element annotation "${annotation}"`);
+          //console.log(`🔍 Dynamic matching: Element annotation "${annotation}"`);
           
           // Use the same improved matching logic
           const metadataRow = this._csvData.find(csvRow => {
@@ -304,7 +304,7 @@ export class MetadataManager {
               matchedAt: new Date()
             };
             
-            console.log(`✅ Dynamic match successful! Adding to cache.`);
+            //console.log(`✅ Dynamic match successful! Adding to cache.`);
             this._elementMetadata.set(elementId, elementMetadata);
             this.notifyListeners();
             return elementMetadata;
@@ -312,7 +312,7 @@ export class MetadataManager {
         }
       }
       
-      console.log(`❌ Dynamic match failed for element: ${elementId}`);
+      //console.log(`❌ Dynamic match failed for element: ${elementId}`);
       return undefined;
       
     } catch (error) {
@@ -349,7 +349,7 @@ export class MetadataManager {
     this._csvData = [];
     this._elementMetadata.clear();
     this._csvHeaders = [];
-    console.log('🧹 MetadataManager: Cleared all metadata');
+    //console.log('🧹 MetadataManager: Cleared all metadata');
     this.notifyListeners();
   }
 
@@ -359,7 +359,7 @@ export class MetadataManager {
   public reset(): void {
     this.clearMetadata();
     this._listeners.clear();
-    console.log('🔄 MetadataManager: Complete reset performed');
+    //console.log('🔄 MetadataManager: Complete reset performed');
   }
 
   /**
@@ -369,7 +369,7 @@ export class MetadataManager {
     if (this._instance) {
       this._instance.reset();
       this._instance = undefined;
-      console.log('🗑️ MetadataManager: Singleton instance reset');
+      //console.log('🗑️ MetadataManager: Singleton instance reset');
     }
   }
 

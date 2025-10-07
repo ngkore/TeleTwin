@@ -16,6 +16,7 @@ import {
   ExposureCategory,
   SteelGrade,
 } from './types';
+import { TowerSimulationController } from '../simulation';
 
 export class StructuralAnalysisManager {
   private static instance: StructuralAnalysisManager;
@@ -44,7 +45,7 @@ export class StructuralAnalysisManager {
    */
   public async initialize(iModel: IModelConnection): Promise<void> {
     this.iModelConnection = iModel;
-    console.log('[StructuralAnalysis] 🏗️ StructuralAnalysisManager: Initializing...');
+    //console.log('[StructuralAnalysis] 🏗️ StructuralAnalysisManager: Initializing...');
 
     // Automatically extract tower data from model
     await this.extractModelData();
@@ -64,20 +65,11 @@ export class StructuralAnalysisManager {
       return;
     }
 
-    console.log('[StructuralAnalysis] 🔍 Starting automatic model data extraction...');
-
     try {
       const extractor = new ModelDataExtractor(this.iModelConnection);
       this.extractedData = await extractor.extractTowerData();
       this.extractionLog = this.extractedData.extractionLog;
       this.isAutoExtracted = true;
-
-      console.log('[StructuralAnalysis] ✅ Model data extraction complete');
-      console.log('[StructuralAnalysis] 📊 Extraction Summary:');
-      console.log(`[StructuralAnalysis]   - Tower sections: ${this.extractedData.sections.length}`);
-      console.log(`[StructuralAnalysis]   - Platforms: ${this.extractedData.platforms.length}`);
-
-      // Detailed extraction info is already prefixed in ModelDataExtractor
 
     } catch (error) {
       console.error('[StructuralAnalysis] ❌ Model data extraction failed:', error);
@@ -88,6 +80,7 @@ export class StructuralAnalysisManager {
 
   /**
    * Run analysis with automatically extracted data
+   * Combines extracted equipment counts from model with Python script defaults
    */
   private async runAnalysisWithExtractedData(): Promise<void> {
     if (!this.extractedData) {
@@ -95,81 +88,28 @@ export class StructuralAnalysisManager {
       return;
     }
 
-    console.log('[StructuralAnalysis] ========================================');
-    console.log('[StructuralAnalysis] 🔧 PREPARING STRUCTURAL ANALYSIS INPUT');
-    console.log('[StructuralAnalysis] ========================================');
+    try {
+      const defaultConfig = this.getDefaultTowerConfiguration();
 
-    const input: AnalysisInput = {
-      sections: this.extractedData.sections,
-      crown_platforms: this.extractedData.platforms,
-      applied_load_kg: 0,
-      wind_speed_ms: 20.0, // Default wind speed from Python example
-      exposure: 'C',
-      steel_grade: 'S355',
-      foundation_params: this.getDefaultFoundationParams(),
-    };
+      // Combine Python script defaults with extracted equipment from model
+      const input: AnalysisInput = {
+        sections: defaultConfig.sections,              // Python script: Tower dimensions
+        applied_load_kg: defaultConfig.applied_load_kg,
+        wind_speed_ms: defaultConfig.wind_speed_ms,   // Python script: 25 m/s
+        exposure: defaultConfig.exposure,              // Python script: Exposure C
+        steel_grade: defaultConfig.steel_grade,        // Python script: S355 steel
+        foundation_params: defaultConfig.foundation_params, // Python script: Foundation params
+        crown_platforms: this.extractedData.platforms, // MODEL: Equipment counts extracted
+      };
 
-    // Log detailed input being sent to analysis engine
-    console.log('[StructuralAnalysis] 📥 INPUT TO ANALYSIS ENGINE:');
-    console.log('[StructuralAnalysis] ─────────────────────────────────────');
-    console.log('[StructuralAnalysis] Tower Sections:');
-    input.sections.forEach((section, idx) => {
-      console.log(`[StructuralAnalysis]   Section ${idx + 1}:`);
-      console.log(`[StructuralAnalysis]     Height: ${section.height} mm`);
-      console.log(`[StructuralAnalysis]     Diameter (bottom): ${section.diameter_bottom} mm`);
-      console.log(`[StructuralAnalysis]     Diameter (top): ${section.diameter_top} mm`);
-      console.log(`[StructuralAnalysis]     Thickness: ${section.thickness} mm`);
-    });
-
-    console.log('[StructuralAnalysis] Crown Platforms:');
-    if (input.crown_platforms) {
-      input.crown_platforms.forEach((platform, idx) => {
-        console.log(`[StructuralAnalysis]   Platform ${idx + 1} @ ${platform.height}m:`);
-        console.log(`[StructuralAnalysis]     Platform weight: ${platform.platform_weight_kg} kg`);
-        console.log(`[StructuralAnalysis]     Platform wind area: ${platform.platform_wind_area_m2} m²`);
-        console.log(`[StructuralAnalysis]     Antennas: ${platform.antennas.length} (${platform.antennas.reduce((s, a) => s + a.weight_kg, 0)} kg)`);
-        console.log(`[StructuralAnalysis]     RRUs: ${platform.rrus.length} (${platform.rrus.reduce((s, r) => s + r.weight_kg, 0)} kg)`);
-        console.log(`[StructuralAnalysis]     Other: ${platform.other_equipment.length} (${platform.other_equipment.reduce((s, e) => s + e.weight_kg, 0)} kg)`);
-      });
+      const results = this.runAnalysis(input);
+      console.log('[StructuralAnalysis] ✅ Analysis completed with extracted equipment from model');
+    } catch (error) {
+      console.error('[StructuralAnalysis] ❌ Analysis failed:', error);
+    } finally {
+      console.log('[StructuralAnalysis] Extraction Log:');
+      this.extractionLog.forEach((log) => console.log(`  - ${log}`));
     }
-
-    console.log('[StructuralAnalysis] Environmental Conditions:');
-    console.log(`[StructuralAnalysis]   Wind Speed: ${input.wind_speed_ms} m/s (${input.wind_speed_ms! * 3.6} km/h)`);
-    console.log(`[StructuralAnalysis]   Exposure Category: ${input.exposure}`);
-    console.log(`[StructuralAnalysis]   Steel Grade: ${input.steel_grade}`);
-
-    if (input.foundation_params) {
-      console.log('[StructuralAnalysis] Foundation Parameters:');
-      console.log(`[StructuralAnalysis]   Bolt Circle Diameter: ${input.foundation_params.bolt_circle_diameter} mm`);
-      console.log(`[StructuralAnalysis]   Number of Bolts: ${input.foundation_params.number_of_bolts}`);
-      console.log(`[StructuralAnalysis]   Bolt Diameter: ${input.foundation_params.bolt_diameter} mm`);
-      console.log(`[StructuralAnalysis]   Bolt Grade: ${input.foundation_params.bolt_grade} MPa`);
-    }
-
-    console.log('[StructuralAnalysis] ─────────────────────────────────────');
-    console.log('[StructuralAnalysis] 🚀 CALLING: engine.analyzeMonopole()');
-    console.log('[StructuralAnalysis] ========================================');
-
-    this.currentInput = input;
-    this.currentAnalysis = this.engine.analyzeMonopole(input);
-
-    console.log('[StructuralAnalysis] ========================================');
-    console.log('[StructuralAnalysis] ✅ ANALYSIS ENGINE COMPLETED');
-    console.log('[StructuralAnalysis] ========================================');
-    console.log('[StructuralAnalysis] 📊 ANALYSIS RESULTS:');
-    console.log(`[StructuralAnalysis]   Tower Height: ${this.currentAnalysis.total_height_m.toFixed(1)} m`);
-    console.log(`[StructuralAnalysis]   Pole Weight: ${this.currentAnalysis.pole_weight_kg.toFixed(1)} kg`);
-    console.log(`[StructuralAnalysis]   Equipment Weight: ${this.currentAnalysis.crown_weight_kg.toFixed(1)} kg`);
-    console.log(`[StructuralAnalysis]   Total Dead Load: ${this.currentAnalysis.total_dead_load_kg.toFixed(1)} kg`);
-    console.log(`[StructuralAnalysis]   Wind Force: ${this.currentAnalysis.wind_force_n.toFixed(0)} N`);
-    console.log(`[StructuralAnalysis]   Wind Moment: ${(this.currentAnalysis.wind_moment_nm / 1000).toFixed(0)} kN⋅m`);
-    console.log(`[StructuralAnalysis]   Governing Element: ${this.currentAnalysis.governing_element}`);
-    console.log(`[StructuralAnalysis]   Max Utilization: ${(this.currentAnalysis.max_utilization * 100).toFixed(1)}%`);
-    console.log(`[StructuralAnalysis]   Status: ${this.currentAnalysis.status}`);
-    console.log(`[StructuralAnalysis]   Governing Combo: ${this.currentAnalysis.governing_combo}`);
-    console.log(`[StructuralAnalysis]   Max Load Capacity: ${this.currentAnalysis.max_load_capacity_kg.toFixed(0)} kg`);
-    console.log(`[StructuralAnalysis]   Remaining Capacity: ${this.currentAnalysis.remaining_capacity_kg.toFixed(0)} kg`);
-    console.log('[StructuralAnalysis] ========================================');
 
     this.notifyListeners();
   }
@@ -190,49 +130,45 @@ export class StructuralAnalysisManager {
   }
 
   /**
-   * Get default tower configuration (15m tower from Python example)
+   * Get default tower configuration matching Python script (15m tower)
+   * NOTE: Equipment counts should come from model extraction or user input
+   * This returns only structural parameters (tower dimensions, foundation, environmental)
    */
   public getDefaultTowerConfiguration(): AnalysisInput {
+    // Python script standard: 15m monopole section
     const sections: TowerSection[] = [
       {
-        height: 15000, // 15 meters in mm
+        height: 15000,        // 15 meters in mm
         diameter_bottom: 628, // 628mm base
-        diameter_top: 250, // 250mm top
-        thickness: 5, // 5mm wall thickness
+        diameter_top: 250,    // 250mm top
+        thickness: 5,         // 5mm wall thickness
       },
     ];
 
+    // Python script standard: 2 crown platforms at 14m and 11m
+    // Equipment arrays are empty - should be populated from model extraction
     const crownPlatforms: CrownPlatform[] = [
       {
-        height: 14.0,
+        height: 14.0,                     // Platform 1 at 14m
         platform_weight_kg: 150,
         platform_wind_area_m2: 1.5,
         cf: 1.5,
-
-        // 4 Sector Antennas
-        antennas: [
-          { type: 'Sector Antenna', weight_kg: 40, wind_area_m2: 1.5, cf: 1.2 },
-          { type: 'Sector Antenna', weight_kg: 40, wind_area_m2: 1.5, cf: 1.2 },
-          { type: 'Sector Antenna', weight_kg: 40, wind_area_m2: 1.5, cf: 1.2 },
-          { type: 'Sector Antenna', weight_kg: 40, wind_area_m2: 1.5, cf: 1.2 },
-        ],
-
-        // 8 RRUs
-        rrus: [
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-          { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 },
-        ],
-
-        other_equipment: [],
+        antennas: [],           // Extract from model
+        rrus: [],               // Extract from model
+        other_equipment: [],    // Extract from model
+      },
+      {
+        height: 11.0,                     // Platform 2 at 11m
+        platform_weight_kg: 120,
+        platform_wind_area_m2: 1.3,
+        cf: 1.5,
+        antennas: [],           // Extract from model
+        rrus: [],               // Extract from model
+        other_equipment: [],    // Extract from model
       },
     ];
 
+    // Python script standard: Foundation parameters
     const foundationParams: FoundationParameters = {
       base_plate_diameter: 750,
       bolt_circle_diameter: 750,
@@ -246,9 +182,9 @@ export class StructuralAnalysisManager {
     return {
       sections,
       applied_load_kg: 0,
-      wind_speed_ms: 25.0,
-      exposure: 'C',
-      steel_grade: 'S355',
+      wind_speed_ms: 20.0,      // Python script default: 25 m/s (can be changed by user)
+      exposure: 'C',             // Python script default: Exposure C
+      steel_grade: 'S355',       // Python script default: S355 steel
       foundation_params: foundationParams,
       crown_platforms: crownPlatforms,
     };
@@ -263,6 +199,217 @@ export class StructuralAnalysisManager {
     this.notifyListeners();
     return this.currentAnalysis;
   }
+
+  /**
+   * Update equipment counts for platforms and recalculate analysis
+   */
+  public updateEquipmentCounts(
+    platformIndex: number,
+    counts: {
+      antennas?: number;
+      rrus?: number;
+      microwave?: boolean;
+    }
+  ): AnalysisResults | null {
+    if (!this.currentInput || !this.currentInput.crown_platforms || !this.currentInput.crown_platforms[platformIndex]) {
+      console.warn(`[StructuralAnalysis] Platform ${platformIndex} not found`);
+      return null;
+    }
+
+    console.log(`[StructuralAnalysis] 🔄 Updating equipment for Platform ${platformIndex + 1}`);
+    console.log(`[StructuralAnalysis]    Antennas: ${counts.antennas || 'unchanged'}`);
+    console.log(`[StructuralAnalysis]    RRUs: ${counts.rrus || 'unchanged'}`);
+    console.log(`[StructuralAnalysis]    Microwave: ${counts.microwave !== undefined ? counts.microwave : 'unchanged'}`);
+
+    const platform = this.currentInput.crown_platforms[platformIndex];
+
+    // Update antennas
+    if (counts.antennas !== undefined) {
+      const antennaTemplate = { type: 'Sector Antenna', weight_kg: 40, wind_area_m2: 1.5, cf: 1.2 };
+      platform.antennas = Array(counts.antennas).fill(null).map(() => ({ ...antennaTemplate }));
+    }
+
+    // Update RRUs
+    if (counts.rrus !== undefined) {
+      const rruTemplate = { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 };
+      platform.rrus = Array(counts.rrus).fill(null).map(() => ({ ...rruTemplate }));
+    }
+
+    // Update microwave
+    if (counts.microwave !== undefined) {
+      if (counts.microwave) {
+        const mwTemplate = { type: 'Microwave Dish', weight_kg: 25, wind_area_m2: 0.3, cf: 1.2 };
+        platform.other_equipment = [mwTemplate];
+      } else {
+        platform.other_equipment = [];
+      }
+    }
+
+    console.log(`[StructuralAnalysis] ✅ Equipment updated for Platform ${platformIndex + 1}`);
+    console.log(`[StructuralAnalysis]    Total Antennas: ${platform.antennas.length}`);
+    console.log(`[StructuralAnalysis]    Total RRUs: ${platform.rrus.length}`);
+    console.log(`[StructuralAnalysis]    Microwave Present: ${platform.other_equipment.length > 0}`);
+
+    // Update simulation visualization
+    this.updateSimulationVisualization();
+
+    // Recalculate structural analysis
+    const results = this.runAnalysis(this.currentInput);
+    console.log(`[StructuralAnalysis] ✅ Analysis recalculated`);
+    return results;
+  }
+
+  /**
+   * Update simulation visualization with current equipment
+   */
+  private updateSimulationVisualization(): void {
+    try {
+      const simulationController = TowerSimulationController.getInstance();
+
+      if (!this.currentInput || !this.currentInput.crown_platforms) {
+        return;
+      }
+
+      // Convert platforms to simulation format
+      const platform1 = this.currentInput.crown_platforms[0];
+      const platform2 = this.currentInput.crown_platforms[1];
+
+      const update: any = {};
+
+      if (platform1) {
+        update.platform1 = {
+          antennas: platform1.antennas.length,
+          rrus: platform1.rrus.length,
+          microlink: platform1.other_equipment.length > 0,
+        };
+      }
+
+      if (platform2) {
+        update.platform2 = {
+          antennas: platform2.antennas.length,
+          rrus: platform2.rrus.length,
+          microlink: platform2.other_equipment.length > 0,
+        };
+      }
+
+      // Update simulation (don't await, let it run in background)
+      simulationController.updateSimulation(update).catch((error) => {
+        console.warn('[StructuralAnalysis] Failed to update simulation:', error);
+      });
+    } catch (error) {
+      console.warn('[StructuralAnalysis] Simulation controller not initialized:', error);
+    }
+  }
+
+  /**
+   * Get current equipment counts for a platform
+   */
+  public getEquipmentCounts(platformIndex: number): { antennas: number; rrus: number; microwave: boolean } | null {
+    if (!this.currentInput || !this.currentInput.crown_platforms || !this.currentInput.crown_platforms[platformIndex]) {
+      return null;
+    }
+
+    const platform = this.currentInput.crown_platforms[platformIndex];
+    return {
+      antennas: platform.antennas.length,
+      rrus: platform.rrus.length,
+      microwave: platform.other_equipment.length > 0,
+    };
+  }
+
+  /**
+   * Get all platforms with their equipment counts
+   */
+  public getAllPlatformEquipment(): Array<{
+    platformNumber: number;
+    height: number;
+    antennas: number;
+    rrus: number;
+    microwave: boolean;
+  }> {
+    if (!this.currentInput || !this.currentInput.crown_platforms) {
+      return [];
+    }
+
+    return this.currentInput.crown_platforms.map((platform, index) => ({
+      platformNumber: index + 1,
+      height: platform.height,
+      antennas: platform.antennas.length,
+      rrus: platform.rrus.length,
+      microwave: platform.other_equipment.length > 0,
+    }));
+  }
+
+  /**
+   * Add equipment to a platform (legacy method - for backward compatibility)
+   */
+  public addRRU(platformIndex: number, rru?: { type: string; weight_kg: number; wind_area_m2: number; cf: number }): AnalysisResults | null {
+    if (!this.currentInput || !this.currentInput.crown_platforms || !this.currentInput.crown_platforms[platformIndex]) {
+      return null;
+    }
+    const rruToAdd = rru || { type: 'RRU', weight_kg: 30, wind_area_m2: 0.6, cf: 1.0 };
+    this.currentInput.crown_platforms[platformIndex].rrus.push(rruToAdd);
+    this.updateSimulationVisualization();
+    return this.runAnalysis(this.currentInput);
+  }
+
+  /**
+   * Add antenna to a platform (legacy method - for backward compatibility)
+   */
+  public addAntenna(platformIndex: number, antenna?: { type: string; weight_kg: number; wind_area_m2: number; cf: number }): AnalysisResults | null {
+    if (!this.currentInput || !this.currentInput.crown_platforms || !this.currentInput.crown_platforms[platformIndex]) {
+      return null;
+    }
+    const antennaToAdd = antenna || { type: 'Sector Antenna', weight_kg: 40, wind_area_m2: 1.5, cf: 1.2 };
+    this.currentInput.crown_platforms[platformIndex].antennas.push(antennaToAdd);
+    this.updateSimulationVisualization();
+    return this.runAnalysis(this.currentInput);
+  }
+
+  /**
+   * Add microwave dish to a platform (legacy method - for backward compatibility)
+   */
+  public addMWDish(platformIndex: number, dish?: { type: string; weight_kg: number; wind_area_m2: number; cf: number }): AnalysisResults | null {
+    if (!this.currentInput || !this.currentInput.crown_platforms || !this.currentInput.crown_platforms[platformIndex]) {
+      return null;
+    }
+    const dishToAdd = dish || { type: 'Microwave Dish', weight_kg: 25, wind_area_m2: 0.3, cf: 1.2 };
+    this.currentInput.crown_platforms[platformIndex].other_equipment.push(dishToAdd);
+    this.updateSimulationVisualization();
+    return this.runAnalysis(this.currentInput);
+  }
+
+  /**
+   * Remove equipment from a platform
+   */
+  public removeEquipment(
+    platformIndex: number,
+    equipmentType: 'antenna' | 'rru' | 'microwave',
+    count: number = 1
+  ): AnalysisResults | null {
+    if (!this.currentInput || !this.currentInput.crown_platforms || !this.currentInput.crown_platforms[platformIndex]) {
+      return null;
+    }
+
+    const platform = this.currentInput.crown_platforms[platformIndex];
+
+    switch (equipmentType) {
+      case 'antenna':
+        platform.antennas = platform.antennas.slice(0, Math.max(0, platform.antennas.length - count));
+        break;
+      case 'rru':
+        platform.rrus = platform.rrus.slice(0, Math.max(0, platform.rrus.length - count));
+        break;
+      case 'microwave':
+        platform.other_equipment = [];
+        break;
+    }
+
+    console.log(`[StructuralAnalysis] Removed ${count} ${equipmentType}(s) from Platform ${platformIndex + 1}`);
+    this.updateSimulationVisualization();
+    return this.runAnalysis(this.currentInput);
+  }
+
 
   /**
    * Update specific parameters and re-run analysis
@@ -405,7 +552,7 @@ export class StructuralAnalysisManager {
    * Re-run automatic extraction and analysis
    */
   public async reExtractAndAnalyze(): Promise<void> {
-    console.log('[StructuralAnalysis] 🔄 Re-running automatic extraction and analysis...');
+    //console.log('[StructuralAnalysis] 🔄 Re-running automatic extraction and analysis...');
     await this.extractModelData();
     if (this.extractedData) {
       await this.runAnalysisWithExtractedData();
