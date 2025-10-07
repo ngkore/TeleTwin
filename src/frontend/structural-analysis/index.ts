@@ -8,3 +8,4 @@ export * from './StructuralAnalysisManager';
 export * from './ModelDataExtractor';
 export * from './StructuralAnalysisWidget';
 export * from './StructuralResultsWidget';
+export * from './SimulationComparisonWidget';

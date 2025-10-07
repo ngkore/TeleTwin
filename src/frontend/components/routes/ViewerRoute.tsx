@@ -36,7 +36,7 @@ import { InfoPanel } from "../InfoPanel";
 import { TeleTwinViewerApp } from "../../app/TeleTwinViewerApp";
 import { cleanupService } from "../../services/CleanupService";
 import { IoTWidgetProvider, IoTDataWidgetProvider, CustomTooltipProvider, TelemetryGraphWidgetProvider } from "../../iot-integration";
-import { StructuralAnalysisWidgetProvider, StructuralResultsWidgetProvider } from "../../structural-analysis";
+import { StructuralAnalysisWidgetProvider, StructuralResultsWidgetProvider, SimulationComparisonWidgetProvider } from "../../structural-analysis";
 import { TowerSimulationController } from "../../simulation";
 
 export interface ViewerRouteState {
@@ -269,6 +269,7 @@ export const ViewerRoute = () => {
     // new GisProviderWidgetProvider(), // Priority 1 - Top of right panel
     new StructuralAnalysisWidgetProvider(), // Priority 150 - Structural analysis input
     new StructuralResultsWidgetProvider(), // Priority 160 - Structural analysis results
+    new SimulationComparisonWidgetProvider(), // Priority 100 - Bottom panel simulation dashboard
     // new IoTWidgetProvider(), // Priority 200
     // new IoTDataWidgetProvider(), // Priority 210
     // new PropertiesWidgetProvider(), // Priority 300

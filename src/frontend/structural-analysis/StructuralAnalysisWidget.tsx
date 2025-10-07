@@ -229,6 +229,11 @@ const StructuralAnalysisWidget: React.FC = () => {
     );
   }
 
+  // Get status color for styling (only if results exist)
+  const statusColor = analysisResults
+    ? manager.getStatusColor(analysisResults.max_utilization)
+    : '#9CA3AF';
+
   return (
     <div style={{ padding: '20px', color: '#EAEAEA', height: '100%', overflowY: 'auto' }}>
       {/* Header */}
@@ -241,90 +246,59 @@ const StructuralAnalysisWidget: React.FC = () => {
         </div>
       </div>
 
-      {/* Tower Dimensions */}
-      <div style={{ marginBottom: '20px' }}>
-        <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#EAEAEA' }}>
-          Tower Dimensions
-        </h4>
+      {/* Quick Results Summary */}
+      {analysisResults && (
+        <div style={{
+          padding: '15px',
+          backgroundColor: `${statusColor}20`,
+          borderRadius: '8px',
+          border: `2px solid ${statusColor}`,
+        }}>
+          <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#A1A1AA' }}>
+            ANALYSIS SUMMARY
+          </div>
 
-        <LabeledInput
-          label="Height (mm)"
-          value={towerHeight.toString()}
-          onChange={(e) => setTowerHeight(parseFloat(e.target.value) || 0)}
-          type="number"
-          style={{ marginBottom: '10px' }}
-        />
+          <div style={{ fontSize: '14px', marginBottom: '8px' }}>
+            <span style={{ color: '#A1A1AA' }}>Status: </span>
+            <span style={{
+              color: manager.getStatusColor(analysisResults.max_utilization),
+              fontWeight: '700'
+            }}>
+              {manager.getStatusText(analysisResults.max_utilization)}
+            </span>
+          </div>
 
-        <LabeledInput
-          label="Base Diameter (mm)"
-          value={diameterBottom.toString()}
-          onChange={(e) => setDiameterBottom(parseFloat(e.target.value) || 0)}
-          type="number"
-          style={{ marginBottom: '10px' }}
-        />
+          <div style={{ fontSize: '13px', marginBottom: '4px' }}>
+            <span style={{ color: '#A1A1AA' }}>Utilization: </span>
+            <span style={{ fontWeight: '600' }}>
+              {(analysisResults.max_utilization * 100).toFixed(1)}%
+            </span>
+          </div>
 
-        <LabeledInput
-          label="Top Diameter (mm)"
-          value={diameterTop.toString()}
-          onChange={(e) => setDiameterTop(parseFloat(e.target.value) || 0)}
-          type="number"
-          style={{ marginBottom: '10px' }}
-        />
+          <div style={{ fontSize: '13px', marginBottom: '4px' }}>
+            <span style={{ color: '#A1A1AA' }}>Max Capacity: </span>
+            <span style={{ fontWeight: '600' }}>
+              {analysisResults.max_load_capacity_kg.toFixed(0)} kg
+            </span>
+          </div>
 
-        <LabeledInput
-          label="Wall Thickness (mm)"
-          value={thickness.toString()}
-          onChange={(e) => setThickness(parseFloat(e.target.value) || 0)}
-          type="number"
-          style={{ marginBottom: '10px' }}
-        />
-      </div>
+          <div style={{ fontSize: '13px' }}>
+            <span style={{ color: '#A1A1AA' }}>Remaining: </span>
+            <span style={{ fontWeight: '600' }}>
+              {analysisResults.remaining_capacity_kg.toFixed(0)} kg
+            </span>
+          </div>
 
-      {/* Environmental Conditions */}
-      <div style={{ marginBottom: '20px' }}>
-        <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#EAEAEA' }}>
-          Environmental Conditions
-        </h4>
-
-        <LabeledInput
-          label="Wind Speed (m/s)"
-          value={windSpeed.toString()}
-          onChange={(e) => setWindSpeed(parseFloat(e.target.value) || 0)}
-          type="number"
-          style={{ marginBottom: '10px' }}
-        />
-
-        <div style={{ marginBottom: '10px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#EAEAEA' }}>
-            Exposure Category
-          </label>
-          <Select
-            options={[
-              { value: 'B', label: 'B - Urban/Suburban' },
-              { value: 'C', label: 'C - Open Terrain' },
-              { value: 'D', label: 'D - Flat/Coastal' },
-            ]}
-            value={exposure}
-            onChange={(value) => setExposure(value as ExposureCategory)}
-          />
+          <div style={{
+            marginTop: '12px',
+            fontSize: '11px',
+            color: '#10B981',
+            fontStyle: 'italic'
+          }}>
+            View detailed results in the Results widget
+          </div>
         </div>
-
-        <div style={{ marginBottom: '10px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#EAEAEA' }}>
-            Steel Grade
-          </label>
-          <Select
-            options={[
-              { value: 'A36', label: 'A36 (248 MPa)' },
-              { value: 'A572-50', label: 'A572-50 (345 MPa)' },
-              { value: 'A992', label: 'A992 (345 MPa)' },
-              { value: 'S355', label: 'S355 (355 MPa)' },
-            ]}
-            value={steelGrade}
-            onChange={(value) => setSteelGrade(value as SteelGrade)}
-          />
-        </div>
-      </div>
+      )}
 
       {/* Equipment Management */}
       <div style={{ marginBottom: '20px' }}>
@@ -443,15 +417,102 @@ const StructuralAnalysisWidget: React.FC = () => {
         </div>
       </div>
 
+      {/* Tower Dimensions */}
+      <div style={{ marginBottom: '20px' }}>
+        <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#EAEAEA' }}>
+          Tower Dimensions
+        </h4>
+
+        <LabeledInput
+          label="Height (mm)"
+          value={towerHeight.toString()}
+          onChange={(e) => setTowerHeight(parseFloat(e.target.value) || 0)}
+          type="number"
+          style={{ marginBottom: '10px' }}
+        />
+
+        <LabeledInput
+          label="Base Diameter (mm)"
+          value={diameterBottom.toString()}
+          onChange={(e) => setDiameterBottom(parseFloat(e.target.value) || 0)}
+          type="number"
+          style={{ marginBottom: '10px' }}
+        />
+
+        <LabeledInput
+          label="Top Diameter (mm)"
+          value={diameterTop.toString()}
+          onChange={(e) => setDiameterTop(parseFloat(e.target.value) || 0)}
+          type="number"
+          style={{ marginBottom: '10px' }}
+        />
+
+        <LabeledInput
+          label="Wall Thickness (mm)"
+          value={thickness.toString()}
+          onChange={(e) => setThickness(parseFloat(e.target.value) || 0)}
+          type="number"
+          style={{ marginBottom: '10px' }}
+        />
+      </div>
+
+      {/* Environmental Conditions */}
+      <div style={{ marginBottom: '20px' }}>
+        <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#EAEAEA' }}>
+          Environmental Conditions
+        </h4>
+
+        <LabeledInput
+          label="Wind Speed (m/s)"
+          value={windSpeed.toString()}
+          onChange={(e) => setWindSpeed(parseFloat(e.target.value) || 0)}
+          type="number"
+          style={{ marginBottom: '10px' }}
+        />
+
+        <div style={{ marginBottom: '10px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#EAEAEA' }}>
+            Exposure Category
+          </label>
+          <Select
+            options={[
+              { value: 'B', label: 'B - Urban/Suburban' },
+              { value: 'C', label: 'C - Open Terrain' },
+              { value: 'D', label: 'D - Flat/Coastal' },
+            ]}
+            value={exposure}
+            onChange={(value) => setExposure(value as ExposureCategory)}
+          />
+        </div>
+
+        <div style={{ marginBottom: '10px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#EAEAEA' }}>
+            Steel Grade
+          </label>
+          <Select
+            options={[
+              { value: 'A36', label: 'A36 (248 MPa)' },
+              { value: 'A572-50', label: 'A572-50 (345 MPa)' },
+              { value: 'A992', label: 'A992 (345 MPa)' },
+              { value: 'S355', label: 'S355 (355 MPa)' },
+            ]}
+            value={steelGrade}
+            onChange={(value) => setSteelGrade(value as SteelGrade)}
+          />
+        </div>
+      </div>
+
+      
+
       {/* Action Buttons */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-        <Button
+        {/* <Button
           onClick={handleCSVUpload}
           styleType="cta"
           style={{ width: '100%' }}
         >
           📤 Upload Metadata CSV
-        </Button>
+        </Button> */}
 
         <div style={{ display: 'flex', gap: '10px' }}>
           <Button
@@ -502,63 +563,11 @@ const StructuralAnalysisWidget: React.FC = () => {
           size="small"
           style={{ width: '100%' }}
         >
-          {showLog ? '📋 Hide Extraction Log' : '📋 Show Extraction Log'}
+          {showLog ? 'Hide Extraction Log' : 'Show Extraction Log'}
         </Button>
       </div>
 
-      {/* Quick Results Summary */}
-      {analysisResults && (
-        <div style={{
-          padding: '15px',
-          backgroundColor: 'rgba(255,255,255,0.05)',
-          borderRadius: '8px',
-          border: `2px solid ${manager.getStatusColor(analysisResults.max_utilization)}`,
-        }}>
-          <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#A1A1AA' }}>
-            ANALYSIS SUMMARY
-          </div>
-
-          <div style={{ fontSize: '14px', marginBottom: '8px' }}>
-            <span style={{ color: '#A1A1AA' }}>Status: </span>
-            <span style={{
-              color: manager.getStatusColor(analysisResults.max_utilization),
-              fontWeight: '700'
-            }}>
-              {manager.getStatusText(analysisResults.max_utilization)}
-            </span>
-          </div>
-
-          <div style={{ fontSize: '13px', marginBottom: '4px' }}>
-            <span style={{ color: '#A1A1AA' }}>Utilization: </span>
-            <span style={{ fontWeight: '600' }}>
-              {(analysisResults.max_utilization * 100).toFixed(1)}%
-            </span>
-          </div>
-
-          <div style={{ fontSize: '13px', marginBottom: '4px' }}>
-            <span style={{ color: '#A1A1AA' }}>Max Capacity: </span>
-            <span style={{ fontWeight: '600' }}>
-              {analysisResults.max_load_capacity_kg.toFixed(0)} kg
-            </span>
-          </div>
-
-          <div style={{ fontSize: '13px' }}>
-            <span style={{ color: '#A1A1AA' }}>Remaining: </span>
-            <span style={{ fontWeight: '600' }}>
-              {analysisResults.remaining_capacity_kg.toFixed(0)} kg
-            </span>
-          </div>
-
-          <div style={{
-            marginTop: '12px',
-            fontSize: '11px',
-            color: '#10B981',
-            fontStyle: 'italic'
-          }}>
-            View detailed results in the Results widget
-          </div>
-        </div>
-      )}
+      
 
       {/* Extraction Log */}
       {showLog && (
