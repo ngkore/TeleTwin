@@ -1,7 +1,11 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
+* Copyright ©️ 2025 NgKore Foundation
+* SPDX-License-Identifier: Apache-2.0
+* This project was donated to the NgKore Foundation by
+* Shreya Sethi.
+* Modifications are licensed under the Apache-2.0 License.
 *--------------------------------------------------------------------------------------------*/
+
 import { StagePanelLocation, StagePanelSection, UiItemsProvider, useActiveViewport, Widget, WidgetState } from "@itwin/appui-react";
 import {  ModelMapLayerProps, ModelMapLayerSettings } from "@itwin/core-common";
 import { MapLayerSource, MapLayerSourceStatus } from "@itwin/core-frontend";

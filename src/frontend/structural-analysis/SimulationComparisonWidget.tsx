@@ -1,4 +1,13 @@
 /*---------------------------------------------------------------------------------------------
+* Copyright ©️ 2025 NgKore Foundation
+* SPDX-License-Identifier: Apache-2.0
+* This project was donated to the NgKore Foundation by
+* Shreya Sethi.
+* Modifications are licensed under the Apache-2.0 License.
+*--------------------------------------------------------------------------------------------*/
+
+
+/*---------------------------------------------------------------------------------------------
  * Simulation Comparison Widget
  *
  * Shows detailed before/after comparison of equipment changes and structural impact

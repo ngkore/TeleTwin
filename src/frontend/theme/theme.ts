@@ -1,4 +1,13 @@
 /*---------------------------------------------------------------------------------------------
+* Copyright ©️ 2025 NgKore Foundation
+* SPDX-License-Identifier: Apache-2.0
+* This project was donated to the NgKore Foundation by
+* Shreya Sethi.
+* Modifications are licensed under the Apache-2.0 License.
+*--------------------------------------------------------------------------------------------*/
+
+
+/*---------------------------------------------------------------------------------------------
  * Theme Configuration for TeleTwin Application
  * Color Scheme: Dark Grey, White, and Blue
  * Easily configurable - modify colors here to change the entire app theme

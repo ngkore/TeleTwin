@@ -3,6 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+/*---------------------------------------------------------------------------------------------
+* Copyright ©️ 2025 NgKore Foundation
+* SPDX-License-Identifier: Apache-2.0
+* This project was donated to the NgKore Foundation by
+* Shreya Sethi.
+* Modifications are licensed under the Apache-2.0 License.
+*--------------------------------------------------------------------------------------------*/
+
 export const appInfo = {
   id: "itwin-viewer",
   title: "TeleTwin",

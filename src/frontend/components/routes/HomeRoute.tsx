@@ -3,22 +3,21 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import React, { useContext, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+/*---------------------------------------------------------------------------------------------
+* Copyright ©️ 2025 NgKore Foundation
+* SPDX-License-Identifier: Apache-2.0
+* This project was donated to the NgKore Foundation by
+* Shreya Sethi.
+* Modifications are licensed under the Apache-2.0 License.
+*--------------------------------------------------------------------------------------------*/
 
-import { TeleTwinViewerApp } from "../../app/TeleTwinViewerApp";
+import React, { useContext, useEffect } from "react";
 import { SettingsContext } from "../../services/SettingsContext";
 import { NewHome } from "../home/NewHome";
 import { ThemeProvider } from "../../theme/ThemeProvider";
 
 export const HomeRoute = () => {
-  const navigate = useNavigate();
   const userSettings = useContext(SettingsContext);
-
-  useEffect(() => {
-    // must be initialized here (child of the Router) in order to use the navigate function
-    TeleTwinViewerApp.initializeMenuListeners(navigate, userSettings.addRecent);
-  }, [navigate, userSettings]);
 
   return (
     <ThemeProvider>

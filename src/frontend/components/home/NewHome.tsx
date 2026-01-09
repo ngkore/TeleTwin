@@ -1,7 +1,11 @@
 /*---------------------------------------------------------------------------------------------
- * Modern Home Page Component for TeleTwin
- * Features: Tower list, search, modern UI with black/white/blue theme
- *--------------------------------------------------------------------------------------------*/
+* Copyright ©️ 2025 NgKore Foundation
+* SPDX-License-Identifier: Apache-2.0
+* This project was donated to the NgKore Foundation by
+* Shreya Sethi.
+* Modifications are licensed under the Apache-2.0 License.
+*--------------------------------------------------------------------------------------------*/
+
 
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';

@@ -1,3 +1,12 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright ©️ 2025 NgKore Foundation
+* SPDX-License-Identifier: Apache-2.0
+* This project was donated to the NgKore Foundation by
+* Shreya Sethi.
+* Modifications are licensed under the Apache-2.0 License.
+*--------------------------------------------------------------------------------------------*/
+
+
 import { v4 as uuidv4 } from 'uuid';
 import { AntennaDevice, AntennaTelemetry, PolarizationType, DeviceStatus, DeviceType } from '../types';
 import { DataGenerators } from '../utils';

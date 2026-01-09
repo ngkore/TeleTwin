@@ -81,42 +81,7 @@ export class TeleTwinViewerApp {
       : val.filePaths[0];
   }
 
-  public static initializeMenuListeners(
-    navigate: NavigateFunction,
-    addRecent: (
-      path: string,
-      iModelName?: string,
-      TeleTwinId?: string,
-      iModelId?: string
-    ) => Promise<void>
-  ) {
-    if (this._menuListener) {
-      // initialize only once
-      return;
-    }
-    this._menuListener = async (sender, arg) => {
-      switch (arg) {
-        case "open":
-          const filePath = await TeleTwinViewerApp.getFile();
-          if (filePath) {
-            void addRecent(filePath);
-            await navigate(`/viewer`, { state: { filePath } });
-          }
-          break;
-        case "download":
-          await navigate("/itwins");
-          break;
-        case "home":
-          await navigate("/");
-          break;
-        case "preferences":
-          alert("Coming Soon!");
-          break;
-      }
-    };
-    IpcApp.addListener(channelName, this._menuListener);
-  }
-
+  
   public static async saveBriefcase(
     iModelName?: string
   ): Promise<string | undefined> {

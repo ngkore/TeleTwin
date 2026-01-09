@@ -1,4 +1,13 @@
 /*---------------------------------------------------------------------------------------------
+* Copyright ©️ 2025 NgKore Foundation
+* SPDX-License-Identifier: Apache-2.0
+* This project was donated to the NgKore Foundation by
+* Shreya Sethi.
+* Modifications are licensed under the Apache-2.0 License.
+*--------------------------------------------------------------------------------------------*/
+
+
+/*---------------------------------------------------------------------------------------------
  * Tower File Management Service
  * Handles folder path selection, file scanning, and CSV parsing for tower data
  *--------------------------------------------------------------------------------------------*/

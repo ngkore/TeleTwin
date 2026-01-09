@@ -1,7 +1,11 @@
 /*---------------------------------------------------------------------------------------------
- * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
- * See LICENSE.md in the project root for license terms and full copyright notice.
- *--------------------------------------------------------------------------------------------*/
+* Copyright ©️ 2025 NgKore Foundation
+* SPDX-License-Identifier: Apache-2.0
+* This project was donated to the NgKore Foundation by
+* Shreya Sethi.
+* Modifications are licensed under the Apache-2.0 License.
+*--------------------------------------------------------------------------------------------*/
+
 
 import { IModelConnection } from "@itwin/core-frontend";
 
@@ -207,17 +211,13 @@ export class MetadataManager {
    * Get metadata for a specific element
    */
   public getElementMetadata(elementId: string): ElementMetadata | undefined {
-    //console.log(`🔍 MetadataManager: Looking for metadata for element: ${elementId}`);
-    //console.log(`📊 Available metadata elements:`, Array.from(this._elementMetadata.keys()));
+    
     
     const result = this._elementMetadata.get(elementId);
     if (result) {
       //console.log(`✅ Found metadata for element ${elementId}:`, result);
     } else {
-      //console.log(`❌ No metadata found for element ${elementId}`);
-      //console.log(`📋 Total metadata entries: ${this._elementMetadata.size}`);
       
-      // Trigger dynamic matching asynchronously but return undefined immediately
       this.dynamicElementMatch(elementId);
     }
     

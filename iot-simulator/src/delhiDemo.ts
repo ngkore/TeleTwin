@@ -1,4 +1,10 @@
-#!/usr/bin/env node
+/*---------------------------------------------------------------------------------------------
+* Copyright ©️ 2025 NgKore Foundation
+* SPDX-License-Identifier: Apache-2.0
+* This project was donated to the NgKore Foundation by
+* Shreya Sethi.
+* Modifications are licensed under the Apache-2.0 License.
+*--------------------------------------------------------------------------------------------*/
 
 import { DelhiTowerSimulator, DelhiTowerConfig } from './delhiSimulator';
 import { DELHI_ENVIRONMENT } from './vendorSpecs';

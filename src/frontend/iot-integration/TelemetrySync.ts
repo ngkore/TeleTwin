@@ -1,4 +1,14 @@
 /*---------------------------------------------------------------------------------------------
+* Copyright ©️ 2025 NgKore Foundation
+* SPDX-License-Identifier: Apache-2.0
+* This project was donated to the NgKore Foundation by
+* Shreya Sethi.
+* Modifications are licensed under the Apache-2.0 License.
+*--------------------------------------------------------------------------------------------*/
+
+
+
+/*---------------------------------------------------------------------------------------------
  * Telemetry Synchronization Service
  *
  * Manages periodic synchronization of telemetry data from IoT simulation to iTwin elements.

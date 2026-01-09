@@ -1,4 +1,13 @@
 /*---------------------------------------------------------------------------------------------
+* Copyright ©️ 2025 NgKore Foundation
+* SPDX-License-Identifier: Apache-2.0
+* This project was donated to the NgKore Foundation by
+* Shreya Sethi.
+* Modifications are licensed under the Apache-2.0 License.
+*--------------------------------------------------------------------------------------------*/
+
+
+/*---------------------------------------------------------------------------------------------
  * Cleanup Service
  * Manages proper cleanup of all managers and data when switching between models or closing app
  * Ensures production-ready memory management and prevents data contamination
